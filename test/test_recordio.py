@@ -10,35 +10,36 @@ def convert(output_path, reader, num_shards, name_prefix):
     :param name_prefix: the name prefix of generated files.
     """
 
-    indx_f = 0
-    writer = None
-    f = None
+    def open_needs(idx):
+        n = "%s/%s-%05d" % (output_path, name_prefix, idx)
+        w = recordio.writer(n)
+        f = open(n, "w")
+        idx += 1
 
-    def open():
-        f_name = "%s/%s-%05d" % (output_path, name_prefix, index_f)
-        writer = recordio.writer(f_name)
-        f = open(f_name, "w")
-        index_f += 1
+        return w, f, idx
 
-    def close():
-        if writer is not None:
-            writer.close()
+    def close_needs(w, f):
+        if w is not None:
+            w.close()
 
         if f is not None:
             f.close()
 
+    idx = 0
+    w = None
+    f = None
 
     for i, d in enumerate(reader()):
-        if writer is None:
-            open()
+        if w is None:
+            w, f, idx = open_needs(idx)
 
-        writer.write(pickle.dump(d, pickle.HIGHEST_PROTOCOL))
+        w.write(pickle.dumps(d, pickle.HIGHEST_PROTOCOL))
 
         if i % num_shards == 0 and i >= num_shards:
-            close()
-            open()
+            close_needs(w, f)
+            w, f, idx = open_needs(idx)
 
-    close()
+    close_needs(w, f)
 
 import tempfile
 import glob
@@ -50,13 +51,13 @@ def test_convert():
 
         return reader
 
-    _, temp_path = tempfile.mkstemp()
+    path = tempfile.mkdtemp()
 
     convert(
-        temp_path,
+        path,
         test_reader(), 4, 'random_images')
 
-    files = glob.glob(temp_path + '/random_images-*')
-    self.assertEqual(len(files), 3)
+    files = glob.glob(path + '/random_images-*')
+    print len(files) == 3
 
 test_convert()

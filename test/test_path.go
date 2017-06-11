@@ -16,4 +16,8 @@ func main() {
 
 	ext := filepath.Ext(path)
 	fmt.Println(ext) // .txt
+
+	path = "/pfs/datacenter/dir1"
+	dir, file := filepath.Split(path)
+	fmt.Printf("dir:%s file:%s\n", dir, file)
 }
