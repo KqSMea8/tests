@@ -50,33 +50,33 @@ def convert(output_path, reader, num_shards, name_prefix, max_lines_to_shuffle=1
     close_writers(w)
 
 def test_convert():
-        record_num = 10
-        num_shards = 4
+    record_num = 10
+    num_shards = 4
 
-        def test_reader():
-            def reader():
-                for x in xrange(record_num):
-                    yield x
+    def test_reader():
+        def reader():
+            for x in xrange(record_num):
+                yield x
 
-            return reader
+        return reader
 
-        path = tempfile.mkdtemp()
-        #paddle.v2.dataset.common.convert(path,
-        convert(path,
-                                         test_reader(), num_shards, 'random_images')
+    path = tempfile.mkdtemp()
+    #paddle.v2.dataset.common.convert(path,
+    convert(path,
+                                     test_reader(), num_shards, 'random_images')
 
-        files = glob.glob(temp_path + '/random_images-*')
-        self.assertEqual(len(files), num_shards)
+    files = glob.glob(temp_path + '/random_images-*')
+    self.assertEqual(len(files), num_shards)
 
-        total = 0
-        for i in range(0, num_shards):
-            n = "%s/random_images-%05d-of-%05d" % (path, i, num_shards - 1)
-            r = recordio.reader(n)
-            for m in enumerate(r):
-                total += 1
+    total = 0
+    for i in range(0, num_shards):
+        n = "%s/random_images-%05d-of-%05d" % (path, i, num_shards - 1)
+        r = recordio.reader(n)
+        for m in enumerate(r):
+            total += 1
 
-        #self.assertEqual(total, record_num)
-        print total == recordnum
+    #self.assertEqual(total, record_num)
+    print total == recordnum
 
 
 
