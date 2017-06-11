@@ -1,6 +1,10 @@
-def convert(output_path, reader, num_shards, name_prefix):
+import tempfile
+import glob
+
+def convert(output_path, reader, num_shards, name_prefix, max_lines_to_shuffle=10000):
     import recordio
     import cPickle as pickle
+    import random
     """
     Convert data from reader to recordio format files.
 
@@ -8,56 +12,72 @@ def convert(output_path, reader, num_shards, name_prefix):
     :param reader: a data reader, from which the convert program will read data instances.
     :param num_shards: the number of shards that the dataset will be partitioned into.
     :param name_prefix: the name prefix of generated files.
+    :param max_lines_to_shuffle: the max lines numbers to shuffle before writing.
     """
 
-    def open_needs(idx):
-        n = "%s/%s-%05d" % (output_path, name_prefix, idx)
-        w = recordio.writer(n)
-        f = open(n, "w")
-        idx += 1
+    assert num_shards >= 1
+    assert max_lines_to_shuffle >= 1
 
-        return w, f, idx
+    def open_writers():
+        w = []
+        for i in range(0, num_shards):
+            n = "%s/%s-%05d-of-%05d" % (output_path, name_prefix, i, num_shards - 1)
+            w[i] = recordio.writer(n)
 
-    def close_needs(w, f):
-        if w is not None:
-            w.close()
+        return w
 
-        if f is not None:
-            f.close()
+    def close_writers(w):
+        for i in range(0, num_shards):
+            w[i].close()
 
-    idx = 0
-    w = None
-    f = None
+    def write_data(w, lines):
+        random.shuffle(lines)
+        for i, d in enumerate(lines):
+            w[i % num_shards].write(pickle.dumps(d, pickle.HIGHEST_PROTOCOL))
+
+
+    w = open_writers(num_shards)
+    lines = []
 
     for i, d in enumerate(reader()):
-        if w is None:
-            w, f, idx = open_needs(idx)
+        lines.append(d)
+        if i % max_lines_to_shuffle == 0  and i >= max_lines_to_shuffle:
+            write_data(w, lines)
+            lines = []
+            continue
 
-        w.write(pickle.dumps(d, pickle.HIGHEST_PROTOCOL))
+    write_data(w, lines)
+    close_writers(w)
 
-        if i % num_shards == 0 and i >= num_shards:
-            close_needs(w, f)
-            w, f, idx = open_needs(idx)
-
-    close_needs(w, f)
-
-import tempfile
-import glob
 def test_convert():
-    def test_reader():
-        def reader():
-            for x in xrange(10):
-                yield x
+        record_num = 10
+        num_shards = 4
 
-        return reader
+        def test_reader():
+            def reader():
+                for x in xrange(record_num):
+                    yield x
 
-    path = tempfile.mkdtemp()
+            return reader
 
-    convert(
-        path,
-        test_reader(), 4, 'random_images')
+        path = tempfile.mkdtemp()
+        #paddle.v2.dataset.common.convert(path,
+        convert(path,
+                                         test_reader(), num_shards, 'random_images')
 
-    files = glob.glob(path + '/random_images-*')
-    print len(files) == 3
+        files = glob.glob(temp_path + '/random_images-*')
+        self.assertEqual(len(files), num_shards)
+
+        total = 0
+        for i in range(0, num_shards):
+            n = "%s/random_images-%05d-of-%05d" % (path, i, num_shards - 1)
+            r = recordio.reader(n)
+            for m in enumerate(r):
+                total += 1
+
+        #self.assertEqual(total, record_num)
+        print total == recordnum
+
+
 
 test_convert()
