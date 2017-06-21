@@ -1,5 +1,7 @@
 import tempfile
 import glob
+import recordio
+import cPickle as pickle
 
 def convert(output_path, reader, num_shards, name_prefix, max_lines_to_shuffle=10000):
     import recordio
@@ -22,7 +24,7 @@ def convert(output_path, reader, num_shards, name_prefix, max_lines_to_shuffle=1
         w = []
         for i in range(0, num_shards):
             n = "%s/%s-%05d-of-%05d" % (output_path, name_prefix, i, num_shards - 1)
-            w[i] = recordio.writer(n)
+            w.append(recordio.writer(n))
 
         return w
 
@@ -33,10 +35,10 @@ def convert(output_path, reader, num_shards, name_prefix, max_lines_to_shuffle=1
     def write_data(w, lines):
         random.shuffle(lines)
         for i, d in enumerate(lines):
-            w[i % num_shards].write(pickle.dumps(d, pickle.HIGHEST_PROTOCOL))
+            d = pickle.dumps(d, pickle.HIGHEST_PROTOCOL)
+            w[i % num_shards].write(d)
 
-
-    w = open_writers(num_shards)
+    w = open_writers()
     lines = []
 
     for i, d in enumerate(reader()):
@@ -65,19 +67,29 @@ def test_convert():
     convert(path,
                                      test_reader(), num_shards, 'random_images')
 
-    files = glob.glob(temp_path + '/random_images-*')
-    self.assertEqual(len(files), num_shards)
+    files = glob.glob(path + '/random_images-*')
+    #self.assertEqual(len(files), num_shards)
+    print len(files) == num_shards
 
-    total = 0
+    recs = []
     for i in range(0, num_shards):
         n = "%s/random_images-%05d-of-%05d" % (path, i, num_shards - 1)
         r = recordio.reader(n)
-        for m in enumerate(r):
-            total += 1
+        while True:
+            d = r.read()
+            if d is None:
+                break
+            recs.append(d)
 
+    recs.sort()
     #self.assertEqual(total, record_num)
-    print total == recordnum
+    print len(recs) == record_num
 
 
 
 test_convert()
+"""
+s = pickle.dumps("1")
+print s
+print pickle.loads(s)
+"""
