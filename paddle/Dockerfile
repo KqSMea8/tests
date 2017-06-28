@@ -30,6 +30,8 @@ RUN cd /root && \
 RUN vim +PluginInstall +qall
 #RUN vim +GoInstallBinaries +qall
 
-RUN alias vi=vim
+RUN echo "alias vi=vim" >> /root/.bashrc
+RUN git config --global user.email "weibao.gong@gmail.com" && \
+    git config --global user.name "gongweibao"
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
