@@ -25,7 +25,11 @@ RUN cd /root && \
     git submodule update --init --recursive && \
     ./install.py --gocode-completer --clang-completer
 
-RUN mkdir -p /root/gopath/src/github.com/PaddlePaddle 
+#RUN mkdir -p /root/gopath/src/github.com/PaddlePaddle 
 
 RUN vim +PluginInstall +qall
 #RUN vim +GoInstallBinaries +qall
+
+RUN alias vi=vim
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
