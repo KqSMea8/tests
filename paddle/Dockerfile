@@ -31,7 +31,12 @@ RUN vim +PluginInstall +qall
 #RUN vim +GoInstallBinaries +qall
 
 RUN echo "alias vi=vim" >> /root/.bashrc
+RUN echo "export GOROOT=/usr/local/go" >> /root/.bashrc
+RUN echo "export GOPATH=/root/gopath" >> /root/.bashrc
+RUN echo "export PATH=${PATH}:${GOROOT}/bin" >> /root/.bashrc
+
 RUN git config --global user.email "weibao.gong@gmail.com" && \
     git config --global user.name "gongweibao"
+
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
