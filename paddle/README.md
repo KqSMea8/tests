@@ -32,6 +32,7 @@ ssh -p 2202 root@host
 ```
 cd ~/go/src/github.com/PaddlePaddle/Paddle
 pre-commit install
+vim +GoInstallBinaries +qall
 ```
 
 #常用的paddle命令
