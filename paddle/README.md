@@ -1,10 +1,10 @@
-#构建镜像
+## 构建镜像
 ```
 docker built . -t gongweibao/paddledev
 docker push gongweibao/paddledev
 ```
 
-#Host机器上的准备
+## Host机器上的准备
 - 创建自己的用户
 
 ```
@@ -17,12 +17,12 @@ cd ~/go/src/github.com/PaddlePaddle
 git clone https://github.com/gongweibao/Paddle.git
 ```
 
-#启动镜像
+## 启动镜像
 ```
 docker run -d -p 2202:22 --name gwbpaddle -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
 ```
 
-#登陆镜像
+## 登陆镜像
 ```
 ssh -p 2202 root@host
 ```
@@ -35,7 +35,7 @@ pre-commit install
 vim +GoInstallBinaries +qall
 ```
 
-#常用的paddle命令
+## 常用的paddle命令
 
 - 编译安装所有
 
