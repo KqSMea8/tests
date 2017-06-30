@@ -68,5 +68,5 @@ make xxxx
 
 可以通过这种方式而不用安装所有的东西达到进行测试部分的目的
 ```
-cat /root/go/src/github.com/PaddlePaddle/Paddle > /usr/local/lib/python2.7/dist-packages/paddle.pth
+echo "/root/go/src/github.com/PaddlePaddle/Paddle/python" > /usr/local/lib/python2.7/dist-packages/paddle.pth
 ```
