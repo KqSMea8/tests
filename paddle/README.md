@@ -70,3 +70,14 @@ make xxxx
 ```
 echo "/root/go/src/github.com/PaddlePaddle/Paddle/python" > /usr/local/lib/python2.7/dist-packages/paddle.pth
 ```
+
+## pre-commit  
+```
+pip install -U pre-commit
+cd paddle
+pre-commit install
+pre-commit run -a
+git commti -a -m 'Update pre-commit changes'
+git push
+```
+
