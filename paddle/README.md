@@ -43,6 +43,7 @@ vim +GoInstallBinaries +qall
 export WITH_GPU=OFF
 export WITH_AVX=OFF
 export WITH_TEST=ON
+export WITH_GOLANG=TRUE
 cd /paddle
 bash paddle/scripts/docker/build.sh
 ```
