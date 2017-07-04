@@ -82,3 +82,10 @@ git commti -a -m 'Update pre-commit changes'
 git push
 ```
 
+## install glide
+```
+apt-get install software-properties-common
+add-apt-repository ppa:masterminds/glide 
+apt-get update
+apt-get install glide
+```
