@@ -65,6 +65,7 @@ cmake .. \
       -DWITH_TESTING=${WITH_TESTING:-ON} \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 make xxxx
+make install
 ```
 
 - [修改python路径](https://www.douban.com/note/334738164/)
