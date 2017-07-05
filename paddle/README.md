@@ -57,12 +57,12 @@ cmake .. \
       -DCMAKE_BUILD_TYPE=Release \
       -DWITH_DOC=OFF \
       -DWITH_GPU=${WITH_GPU:-OFF} \
-      -DWITH_AVX=${WITH_AVX:-OFF} \
-      -DWITH_GOLANG=${WITH_GOLANG:-OFF} \
+      -DWITH_AVX=${WITH_AVX:-ON} \
+      -DWITH_GOLANG=${WITH_GOLANG:-ON} \
       -DWITH_SWIG_PY=ON \
       -DCUDNN_ROOT=/usr/ \
       -DWITH_STYLE_CHECK=${WITH_STYLE_CHECK:-OFF} \
-      -DWITH_TESTING=${WITH_TESTING:-OFF} \
+      -DWITH_TESTING=${WITH_TESTING:-ON} \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 make xxxx
 ```
