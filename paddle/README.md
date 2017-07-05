@@ -44,6 +44,7 @@ export WITH_GPU=OFF
 export WITH_AVX=OFF
 export WITH_TEST=ON
 export WITH_GOLANG=ON
+export WITH_TESTING=ON
 cd /paddle
 bash paddle/scripts/docker/build.sh
 ```
