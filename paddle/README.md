@@ -45,6 +45,7 @@ export WITH_AVX=OFF
 export WITH_TEST=ON
 export WITH_GOLANG=ON
 export WITH_TESTING=ON
+export RUN_TEST=ON
 cd /paddle
 bash paddle/scripts/docker/build.sh
 ```
