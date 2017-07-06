@@ -123,11 +123,11 @@ filetype plugin indent on    " required
 
 "nerd tree----
 Plugin 'scrooloose/nerdtree'
-set autochdir
+"set autochdir
 set tags=tags;
 let NERDTreeChDirMode=2
-nnoremap <leader>n :NERDTree .<CR>
-nnoremap <leader>N :NERDTreeToggle<CR>
+nnoremap <leader>n :NERDTreeToggle<CR>
+"nnoremap <leader>N :NERDTreeToggle<CR>
 let NERDTreeIgnore = ['\.o']
 let NERDTreeShowLineNumbers=1
 "----
