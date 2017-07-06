@@ -8,7 +8,7 @@ set noexpandtab
 syntax on
 
 autocmd FileType sh,c,cpp,cc,cu,h,hpp,cc,proto,go,sh set expandtab ts=4 sw=4 textwidth=100 cindent
-autocmd FileType py,java,go set expandtab ts=4 sw=4 smartindent
+autocmd FileType py,java,go,cmake set expandtab ts=4 sw=4 smartindent
 au BufNewFile,BufRead *.cu set ft=cuda
 au BufNewFile,BufRead *.cuh set ft=cuda
 
@@ -69,8 +69,8 @@ set foldlevelstart=99       " 打开文件是默认不折叠代码
 "                            " 用空格键来开关折叠
 nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 "----
-set cursorline
-hi CursorLine   cterm=NONE ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
+"set cursorline
+"hi CursorLine   cterm=NONE ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
 
 
 
@@ -130,6 +130,23 @@ nnoremap <leader>n :NERDTreeToggle<CR>
 "nnoremap <leader>N :NERDTreeToggle<CR>
 let NERDTreeIgnore = ['\.o']
 let NERDTreeShowLineNumbers=1
+"----
+
+"nerdtree git----
+set shell=sh
+Plugin 'Xuyuanp/nerdtree-git-plugin'
+let g:NERDTreeIndicatorMapCustom = {
+    \ "Modified"  : "✹",
+    \ "Staged"    : "✚",
+    \ "Untracked" : "✭",
+    \ "Renamed"   : "➜",
+    \ "Unmerged"  : "═",
+    \ "Deleted"   : "✖",
+    \ "Dirty"     : "✗",
+    \ "Clean"     : "✔︎",
+    \ 'Ignored'   : '☒',
+    \ "Unknown"   : "?"
+    \ }
 "----
 
 "easygrep----
@@ -229,4 +246,10 @@ let Tlist_Use_Right_Window=1
 let Tlist_Auto_open=0
 Plugin 'taglist.vim'
 nnoremap <silent> <F9> :Tlist<CR><CR>
+"----
+
+"vim-airline----
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+let g:airline_theme='simple'
 "----
