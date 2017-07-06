@@ -127,26 +127,26 @@ Plugin 'scrooloose/nerdtree'
 set tags=tags;
 let NERDTreeChDirMode=2
 nnoremap <leader>n :NERDTreeToggle<CR>
-"nnoremap <leader>N :NERDTreeToggle<CR>
+nnoremap <leader>N :NERDTreeFind<CR>
 let NERDTreeIgnore = ['\.o']
 let NERDTreeShowLineNumbers=1
 "----
 
 "nerdtree git----
-set shell=sh
-Plugin 'Xuyuanp/nerdtree-git-plugin'
-let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "✹",
-    \ "Staged"    : "✚",
-    \ "Untracked" : "✭",
-    \ "Renamed"   : "➜",
-    \ "Unmerged"  : "═",
-    \ "Deleted"   : "✖",
-    \ "Dirty"     : "✗",
-    \ "Clean"     : "✔︎",
-    \ 'Ignored'   : '☒',
-    \ "Unknown"   : "?"
-    \ }
+"set shell=sh
+"Plugin 'Xuyuanp/nerdtree-git-plugin'
+"let g:NERDTreeIndicatorMapCustom = {
+"    \ "Modified"  : "✹",
+"    \ "Staged"    : "✚",
+"    \ "Untracked" : "✭",
+"    \ "Renamed"   : "➜",
+"    \ "Unmerged"  : "═",
+"    \ "Deleted"   : "✖",
+"    \ "Dirty"     : "✗",
+"    \ "Clean"     : "✔︎",
+"    \ 'Ignored'   : '☒',
+"    \ "Unknown"   : "?"
+"    \ }
 "----
 
 "easygrep----
@@ -249,7 +249,13 @@ nnoremap <silent> <F9> :Tlist<CR><CR>
 "----
 
 "vim-airline----
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-let g:airline_theme='simple'
+"Plugin 'vim-airline/vim-airline'
+"Plugin 'vim-airline/vim-airline-themes'
+"let g:airline_theme='simple'
+"----
+
+
+"ctrp----
+Plugin 'kien/ctrlp.vim'
+let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
 "----
