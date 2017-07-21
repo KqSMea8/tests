@@ -10,8 +10,10 @@ docker push gongweibao/paddledev
 ```
 useradd -d /home/gongwb -m gongwb  
 chown gongwb -R /home/gongwb
-su gongwb
+usermod -a -G root gongwb
+passwd gongwb
 
+su gongwb
 mkdir -p ~/go/src/github.com/PaddlePaddle
 cd ~/go/src/github.com/PaddlePaddle
 git clone https://github.com/gongweibao/Paddle.git
