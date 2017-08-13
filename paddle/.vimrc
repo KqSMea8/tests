@@ -234,8 +234,8 @@ nmap <c-n>d :cs find d <C-R>=expand("<cword>")<CR><CR>
 
 
 "跳转
-autocmd FileType cpp,c,cc,py nnoremap <leader>g  <c-]>
-autocmd FileType cpp,c,cc,py nnoremap <leader>t  <c-t>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g  <c-]>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t  <c-t>
 nnoremap <leader>f  <c-f>
 "----
 
@@ -258,4 +258,16 @@ nnoremap <silent> <F9> :Tlist<CR><CR>
 "ctrp----
 Plugin 'kien/ctrlp.vim'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
+"----
+
+"jedi----
+Bundle 'davidhalter/jedi-vim'
+au FileType python setlocal completeopt-=preview
+au FileType python let g:jedi#goto_command = "<leader>G"
+au FileType python let g:jedi#goto_assignments_command = "<leader>A"
+au FileType python let g:jedi#goto_definitions_command = "<learder>g"
+au FileType python let g:jedi#documentation_command = "<leader>K"
+au FileType python let g:jedi#usages_command = "<leader>U"
+au FileType python let g:jedi#completions_command = "<C-Space>"
+au FileType python let g:jedi#rename_command = "<leader>r"
 "----
