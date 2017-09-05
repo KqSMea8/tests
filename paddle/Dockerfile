@@ -1,7 +1,7 @@
 FROM paddlepaddle/paddle:latest-dev
 
 RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
-    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope
+    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb
 
 RUN cd /root && \
     git clone https://github.com/vim/vim.git && \
