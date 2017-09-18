@@ -23,7 +23,7 @@ git clone https://github.com/gongweibao/Paddle.git
 `--security-opt seccomp=unconfined`是为了能够使用gdb调试，看这里：http://blog.csdn.net/so_dota_so/article/details/77509530
 
 ```
-docker run -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
+nvidia-docker run -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
 ```
 
 ## 登陆镜像
