@@ -25,6 +25,10 @@ RUN cd /root && \
     cd .vim/bundle/YouCompleteMe && \
     git submodule update --init --recursive && \
     ./install.py --gocode-completer --clang-completer
+    
+ENV GOROOT=/usr/local/go GOPATH=/root/go
+ENV PATH=${PATH}:${GOROOT}/bin:${GOPATH}/bin
+RUN curl -s -q https://glide.sh/get | sh
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
