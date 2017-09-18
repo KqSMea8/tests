@@ -153,12 +153,6 @@ let NERDTreeShowLineNumbers=1
 Plugin 'dkprice/vim-easygrep'
 "----
 
-
-"Youcompleteme---
-Plugin 'Valloric/YouCompleteMe'
-let g:ycm_global_ycm_extra_conf = '/root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
-"----
-
 "vim-go
 Plugin 'fatih/vim-go'
 let g:go_def_mode = 'godef'
@@ -270,4 +264,12 @@ au FileType python let g:jedi#documentation_command = "<leader>K"
 au FileType python let g:jedi#usages_command = "<leader>U"
 au FileType python let g:jedi#completions_command = "<C-Space>"
 au FileType python let g:jedi#rename_command = "<leader>r"
+"----
+
+"Youcompleteme---
+Plugin 'Valloric/YouCompleteMe'
+autocmd FileType cuda set ft=c
+let g:ycm_global_ycm_extra_conf = '/root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g :YcmCompleter GoToDefinition<CR>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t :YcmCompleter GoTo<CR>
 "----
