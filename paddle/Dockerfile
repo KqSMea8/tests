@@ -39,6 +39,7 @@ RUN echo "alias vi=vim" >> /root/.bashrc
 RUN echo "export GOROOT=/usr/local/go" >> /root/.bashrc
 RUN echo "export GOPATH=/root/go" >> /root/.bashrc
 RUN echo "export PATH=${PATH}:${GOPATH}/bin" >> /root/.bashrc
+RUN echo "export LD_LIBRARY_PATH=/usr/local/cuda-8.0/targets/x86_64-linux/lib/stubs/:$LD_LIBRARY_PATH"
 
 RUN git config --global user.email "weibao.gong@gmail.com" && \
     git config --global user.name "gongweibao"
