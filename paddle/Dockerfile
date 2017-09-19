@@ -1,7 +1,7 @@
 FROM paddlepaddle/paddle:latest-dev
 
 RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
-    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb
+    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format
 
 RUN cd /root && \
     git clone https://github.com/vim/vim.git && \
@@ -29,6 +29,7 @@ RUN cd /root && \
 ENV GOROOT=/usr/local/go GOPATH=/root/go
 ENV PATH=${PATH}:${GOROOT}/bin:${GOPATH}/bin
 RUN curl -s -q https://glide.sh/get | sh
+RUN go get -u github.com/alecthomas/gometalinter
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
