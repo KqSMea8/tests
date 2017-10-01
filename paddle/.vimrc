@@ -272,4 +272,5 @@ autocmd FileType cuda set ft=c
 let g:ycm_global_ycm_extra_conf = '/root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g :YcmCompleter GoToDefinition<CR>
 au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t :YcmCompleter GoTo<CR>
+hi YcmErrorSection guifg=#800000
 "----
