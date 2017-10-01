@@ -8,7 +8,7 @@ set noexpandtab
 syntax on
 
 autocmd FileType sh,c,cpp,cc,cu,h,hpp,cc,proto,go,sh set expandtab ts=4 sw=4 textwidth=100 cindent
-autocmd FileType py,java,go set expandtab ts=4 sw=4 smartindent
+autocmd FileType py,java,go,cmake set expandtab ts=4 sw=4 smartindent
 au BufNewFile,BufRead *.cu set ft=cuda
 au BufNewFile,BufRead *.cuh set ft=cuda
 
@@ -69,8 +69,8 @@ set foldlevelstart=99       " 打开文件是默认不折叠代码
 "                            " 用空格键来开关折叠
 nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
 "----
-set cursorline
-hi CursorLine   cterm=NONE ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
+"set cursorline
+"hi CursorLine   cterm=NONE ctermbg=NONE ctermfg=NONE guibg=NONE guifg=NONE
 
 
 
@@ -123,23 +123,34 @@ filetype plugin indent on    " required
 
 "nerd tree----
 Plugin 'scrooloose/nerdtree'
-set autochdir
+"set autochdir
 set tags=tags;
 let NERDTreeChDirMode=2
-nnoremap <leader>n :NERDTree .<CR>
-nnoremap <leader>N :NERDTreeToggle<CR>
+nnoremap <leader>n :NERDTreeToggle<CR>
+nnoremap <leader>N :NERDTreeFind<CR>
 let NERDTreeIgnore = ['\.o']
 let NERDTreeShowLineNumbers=1
 "----
 
-"easygrep----
-Plugin 'dkprice/vim-easygrep'
+"nerdtree git----
+"set shell=sh
+"Plugin 'Xuyuanp/nerdtree-git-plugin'
+"let g:NERDTreeIndicatorMapCustom = {
+"    \ "Modified"  : "✹",
+"    \ "Staged"    : "✚",
+"    \ "Untracked" : "✭",
+"    \ "Renamed"   : "➜",
+"    \ "Unmerged"  : "═",
+"    \ "Deleted"   : "✖",
+"    \ "Dirty"     : "✗",
+"    \ "Clean"     : "✔︎",
+"    \ 'Ignored'   : '☒',
+"    \ "Unknown"   : "?"
+"    \ }
 "----
 
-
-"Youcompleteme---
-Plugin 'Valloric/YouCompleteMe'
-let g:ycm_global_ycm_extra_conf = '/Users/gongwb/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+"easygrep----
+Plugin 'dkprice/vim-easygrep'
 "----
 
 "vim-go
@@ -217,8 +228,8 @@ nmap <c-n>d :cs find d <C-R>=expand("<cword>")<CR><CR>
 
 
 "跳转
-autocmd FileType cpp,c,cc,py nnoremap <leader>g  <c-]>
-autocmd FileType cpp,c,cc,py nnoremap <leader>t  <c-t>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g  <c-]>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t  <c-t>
 nnoremap <leader>f  <c-f>
 "----
 
@@ -229,4 +240,37 @@ let Tlist_Use_Right_Window=1
 let Tlist_Auto_open=0
 Plugin 'taglist.vim'
 nnoremap <silent> <F9> :Tlist<CR><CR>
+"----
+
+"vim-airline----
+"Plugin 'vim-airline/vim-airline'
+"Plugin 'vim-airline/vim-airline-themes'
+"let g:airline_theme='simple'
+"----
+
+
+"ctrp----
+Plugin 'kien/ctrlp.vim'
+let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
+"----
+
+"jedi----
+Bundle 'davidhalter/jedi-vim'
+au FileType python setlocal completeopt-=preview
+au FileType python let g:jedi#goto_command = "<leader>G"
+au FileType python let g:jedi#goto_assignments_command = "<leader>A"
+au FileType python let g:jedi#goto_definitions_command = "<learder>g"
+au FileType python let g:jedi#documentation_command = "<leader>K"
+au FileType python let g:jedi#usages_command = "<leader>U"
+au FileType python let g:jedi#completions_command = "<C-Space>"
+au FileType python let g:jedi#rename_command = "<leader>r"
+"----
+
+"Youcompleteme---
+Plugin 'Valloric/YouCompleteMe'
+autocmd FileType cuda set ft=c
+let g:ycm_global_ycm_extra_conf = '/root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g :YcmCompleter GoToDefinition<CR>
+au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t :YcmCompleter GoTo<CR>
+hi YcmErrorSection guifg=#800000
 "----

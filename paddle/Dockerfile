@@ -1,6 +1,7 @@
 FROM paddlepaddle/paddle:latest-dev
 
-RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev
+RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
+    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format
 
 RUN cd /root && \
     git clone https://github.com/vim/vim.git && \
@@ -24,6 +25,12 @@ RUN cd /root && \
     cd .vim/bundle/YouCompleteMe && \
     git submodule update --init --recursive && \
     ./install.py --gocode-completer --clang-completer
+    
+ENV GOROOT=/usr/local/go GOPATH=/root/go
+ENV PATH=${PATH}:${GOROOT}/bin:${GOPATH}/bin
+RUN curl -s -q https://glide.sh/get | sh
+RUN go get -u github.com/alecthomas/gometalinter 
+RUN gometalinter --install
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
@@ -34,6 +41,7 @@ RUN echo "alias vi=vim" >> /root/.bashrc
 RUN echo "export GOROOT=/usr/local/go" >> /root/.bashrc
 RUN echo "export GOPATH=/root/go" >> /root/.bashrc
 RUN echo "export PATH=${PATH}:${GOPATH}/bin" >> /root/.bashrc
+RUN echo "export LD_LIBRARY_PATH=/usr/local/cuda-8.0/targets/x86_64-linux/lib/stubs/:${LD_LIBRARY_PATH} >> /root/.bashrc"
 
 RUN git config --global user.email "weibao.gong@gmail.com" && \
     git config --global user.name "gongweibao"
