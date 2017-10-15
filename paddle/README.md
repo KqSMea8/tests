@@ -26,6 +26,13 @@ git clone https://github.com/gongweibao/Paddle.git
 nvidia-docker run -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
 ```
 
+如果nvidia-docker有问题，那么采用不推荐的更古老的办法：
+```
+export CUDA_SO="$(\ls /usr/lib64/libcuda* | xargs -I{} echo '-v {}:{}') $(\ls /usr/lib64/libnvidia* | xargs -I{} echo '-v {}:{}')"
+export DEVICES=$(\ls /dev/nvidia* | xargs -I{} echo '--device {}:{}')
+docker run ${CUDA_SO} ${DEVICES} -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
+```
+
 ## 登陆镜像
 ```
 ssh -p 2202 root@host
