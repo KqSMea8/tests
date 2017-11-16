@@ -10,8 +10,6 @@ docker pull paddlepaddle/centos6u3-capi:latest-dev
 ## 对比时间
 修改`CMakeLists.txt`，分别连接`mkl`和`mklml`下的library,然后执行`./build/exeModel`,看其打印的时间作对比。
 
-注意：使用之前先把mkl和mklml下的paddle.tgz解压缩
-
 
 ## 参数
 - mklml：
