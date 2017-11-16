@@ -7,5 +7,23 @@
 docker pull paddlepaddle/centos6u3-capi:latest-dev
 ```
 
-## 如何做对比
-现在这个repository里边连接的是`mkl`版本，可以换成链接`mklml`的，然后看其打印的时间作对比。
+## 对比时间
+修改`CMakeLists.txt`，分别连接`mkl`和`mklml`下的library,然后执行`./build/exeModel`,看其打印的时间作对比。
+
+注意：使用之前先把mkl和mklml下的paddle.tgz解压缩
+
+
+## 参数
+- mklml：
+  - Paddle版本: `8b1c50c642914f6ab1fb691059d6d88d9995bea1`
+   - 编译参数：
+    ```
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_TESTING=OFF -DWITH_TEST=OFF -DRUN_TEST=OFF -DWITH_GOLANG=OFF -DWITH_PYTHON=OFF -DWITH_SWIG_PY=OFF -DWITH_DOC=OFF -DWITH_STYLE_CHECK=OFF -DWITH_GPU=OFF -DWITH_AVX=ON -DWITH_C_API=ON -DWITH_MKLDNN=ON -DWITH_MKLML=ON
+    ```
+
+- mkl
+   - Paddle版本：`43c6ff212e2475b7f39480a9949b53119d332793`
+   - 编译参数：
+    ```
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_TESTING=OFF -DWITH_TEST=OFF -DRUN_TEST=OFF -DWITH_GOLANG=OFF -DWITH_PYTHON=OFF -DWITH_SWIG_PY=OFF -DWITH_DOC=OFF -DWITH_STYLE_CHECK=OFF -DWITH_GPU=OFF -DWITH_AVX=ON -DWITH_C_API=ON -DWITH_MKLDNN=ON -DWITH_MKLML=OFF
+    ```
