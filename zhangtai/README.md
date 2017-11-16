@@ -4,7 +4,7 @@
 # 重现的步骤
 ## 编译环境
 ```
-docker pull paddlepaddle/centos6u3-capi
+docker pull paddlepaddle/centos6u3-capi:latest-dev
 ```
 
 ## 如何做对比
