@@ -5,13 +5,14 @@
 ## 编译环境
 ```
 docker pull paddlepaddle/centos6u3-capi:latest-dev
+docker run --rm -it -v <your-paddle-repo-path>:/paddle paddlepaddle/centos6u3-capi:latest-dev /bin/bash
 ```
 
 ## 对比时间
 修改`CMakeLists.txt`，分别连接`mkl`和`mklml`下的library,然后执行`./build/exeModel`,看其打印的时间作对比。
 
 
-## 参数
+## 各个库是怎么编译出来的：
 - mklml：
   - Paddle版本: `8b1c50c642914f6ab1fb691059d6d88d9995bea1`
    - 编译参数：
