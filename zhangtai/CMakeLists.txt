@@ -11,7 +11,7 @@ message(status ${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/mkl)
 set(SOURCE_FILES main.cpp common.h modelInput.h modelInput.cpp)
 
-link_directories(${CMAKE_SOURCE_DIR}/mkl/lib/)
+link_directories(${CMAKE_SOURCE_DIR}/mkl/lib)
 
 add_executable(exeModel ${SOURCE_FILES})
 target_link_libraries (exeModel Threads::Threads  paddle_capi_shared)

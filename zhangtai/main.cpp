@@ -138,7 +138,7 @@ int main() {
     CHECK(paddle_matrix_get_row(prob, 0, &array_out)); // 检查输出格式是否正确
 
     printf("Prob: ");
-    for (int i = 0; i < 802; ++i) {
+    for (int i = 0; i < 10; ++i) {
         printf("%.5f ", array_out[i]);
     }
     printf("\n");
