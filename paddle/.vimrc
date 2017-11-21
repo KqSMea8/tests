@@ -49,6 +49,9 @@ nmap <leader>bf :browse oldfiles<CR>
 "nmap <leader>bc :Bclose<CR>
 cnoreabbrev bc Bclose
 
+nmap <C-h>  :bp<CR>
+nmap <C-l>  :bn<CR>
+"nmap <C-n>  :tabnew<CR>
 
 " 设置ctrl+左右键切换缓冲区
 nnoremap <silent> <C-left> :bnext<cr>
@@ -130,6 +133,7 @@ nnoremap <leader>n :NERDTreeToggle<CR>
 nnoremap <leader>N :NERDTreeFind<CR>
 let NERDTreeIgnore = ['\.o']
 let NERDTreeShowLineNumbers=1
+"let NERDTreeMapOpenInTab='<ENTER>'
 "----
 
 "nerdtree git----
@@ -158,11 +162,11 @@ Plugin 'fatih/vim-go'
 let g:go_def_mode = 'godef'
 "let g:go_def_mode = 'guru'
 au FileType go nmap <leader>g :GoDef <C-R>=expand("<cword>")<CR><CR>
-"au Filetype go nnoremap <leader>v :vsp <CR><c-w>l :exe "GoDef" <CR>
-au Filetype go nnoremap <leader>vg :vsp <CR>:exe "GoDef" <CR>
-au Filetype go nnoremap <leader>s :sp <CR>:exe "GoDef"<CR>
-au Filetype go nnoremap <leader>t :tab split <CR>:exe "GoDef"<CR>
-au Filetype go nnoremap <leader>r :GoRun %<CR>
+"au FileType go nnoremap <leader>v :vsp <CR><c-w>l :exe "GoDef" <CR>
+au FileType go nnoremap <leader>vg :vsp <CR>:exe "GoDef" <CR>
+au FileType go nnoremap <leader>s :sp <CR>:exe "GoDef"<CR>
+"au FileType go nnoremap <leader>t :tab split <CR>:exe "GoDef"<CR>
+au FileType go nnoremap <leader>r :GoRun %<CR>
 let g:go_fmt_command = "goimports"
 "----
 
@@ -273,4 +277,13 @@ let g:ycm_global_ycm_extra_conf = '/root/.vim/bundle/YouCompleteMe/third_party/y
 au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>g :YcmCompleter GoToDefinition<CR>
 au FileType cc,c,cpp,cc,cu,h,hpp nnoremap <leader>t :YcmCompleter GoTo<CR>
 hi YcmErrorSection guifg=#800000
+"----
+
+"minibuf---
+Bundle 'fholgado/minibufexpl.vim'
+"----
+
+"bufkill---
+Bundle 'qpkorr/vim-bufkill'
+nmap <c-x> :BD<CR><CR>
 "----
