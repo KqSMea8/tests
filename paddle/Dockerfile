@@ -32,7 +32,7 @@ RUN curl -s -q https://glide.sh/get | sh
 RUN go get -u github.com/alecthomas/gometalinter 
 RUN gometalinter --install
 
-RUN pip install nltk scipy
+RUN pip -y install nltk scipy
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
