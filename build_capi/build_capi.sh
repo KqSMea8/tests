@@ -26,6 +26,7 @@ make DESTDIR="./output" install
 
 
 if [[ ! -z "${WITH_MKLML}" ]]; then
+   find ./third_party/install -name 'libiomp5.so' -exec cp {} output/usr/local/lib \;
    find ./third_party/install -name 'libmklml_gnu.so' -exec cp {} output/usr/local/lib \;
    find ./third_party/install -name 'libmklml_intel.so' -exec cp {} output/usr/local/lib \;
 fi
@@ -34,6 +35,5 @@ if [[ ! -z "${WITH_MKLDNN}" ]]; then
    cp -P ./third_party/install/mkldnn/lib/* output/usr/local/lib/
 fi
 
-find ./third_party/install -name 'libiomp5.so' -exec cp {} output/usr/local/lib \;
 cd output/usr/local
 tar -czvf /paddle/build/paddle.tgz *
