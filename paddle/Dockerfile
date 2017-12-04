@@ -1,7 +1,7 @@
 FROM paddlepaddle/paddle:latest-dev
 
 RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
-    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format
+    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format  iputils-ping python2.7-dbg
 
 RUN cd /root && \
     git clone https://github.com/vim/vim.git && \
@@ -31,6 +31,8 @@ ENV PATH=${PATH}:${GOROOT}/bin:${GOPATH}/bin
 RUN curl -s -q https://glide.sh/get | sh
 RUN go get -u github.com/alecthomas/gometalinter 
 RUN gometalinter --install
+
+RUN pip -y install nltk scipy
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
