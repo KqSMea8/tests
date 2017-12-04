@@ -25,13 +25,13 @@ make -j `nproc`
 make DESTDIR="./output" install
 
 
-if [[ ! -z "${WITH_MKLML}" ]]; then
+if [[ "${WITH_MKLML:-OFF}" == "ON" ]] 
    find ./third_party/install -name 'libiomp5.so' -exec cp {} output/usr/local/lib \;
    find ./third_party/install -name 'libmklml_gnu.so' -exec cp {} output/usr/local/lib \;
    find ./third_party/install -name 'libmklml_intel.so' -exec cp {} output/usr/local/lib \;
 fi
 
-if [[ ! -z "${WITH_MKLDNN}" ]]; then
+if [[ "${WITH_MKLDNN:-OFF}" == "ON" ]] 
    cp -P ./third_party/install/mkldnn/lib/* output/usr/local/lib/
 fi
 
