@@ -162,10 +162,8 @@ Plugin 'fatih/vim-go'
 let g:go_def_mode = 'godef'
 "let g:go_def_mode = 'guru'
 au FileType go nmap <leader>g :GoDef <C-R>=expand("<cword>")<CR><CR>
-"au FileType go nnoremap <leader>v :vsp <CR><c-w>l :exe "GoDef" <CR>
 au FileType go nnoremap <leader>vg :vsp <CR>:exe "GoDef" <CR>
 au FileType go nnoremap <leader>s :sp <CR>:exe "GoDef"<CR>
-"au FileType go nnoremap <leader>t :tab split <CR>:exe "GoDef"<CR>
 au FileType go nnoremap <leader>r :GoRun %<CR>
 let g:go_fmt_command = "goimports"
 "----
@@ -260,14 +258,15 @@ let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standar
 
 "jedi----
 Bundle 'davidhalter/jedi-vim'
-au FileType python setlocal completeopt-=preview
-au FileType python let g:jedi#goto_command = "<leader>G"
-au FileType python let g:jedi#goto_assignments_command = "<leader>A"
-au FileType python let g:jedi#goto_definitions_command = "<learder>g"
-au FileType python let g:jedi#documentation_command = "<leader>K"
-au FileType python let g:jedi#usages_command = "<leader>U"
-au FileType python let g:jedi#completions_command = "<C-Space>"
-au FileType python let g:jedi#rename_command = "<leader>r"
+au FileType py setlocal completeopt-=preview
+au FileType py let g:jedi#goto_command = "<leader>G"
+au FileType py let g:jedi#goto_assignments_command = "<leader>A"
+au FileType py let g:jedi#goto_definitions_command = "<learder>g"
+au FileType py let g:jedi#documentation_command = "<leader>K"
+"au FileType py let g:jedi#usages_command = "<leader>U"
+au FileType py let g:jedi#usages_command = ""
+au FileType py let g:jedi#completions_command = "<C-Space>"
+au FileType py let g:jedi#rename_command = "<leader>r"
 "----
 
 "Youcompleteme---
@@ -280,10 +279,18 @@ hi YcmErrorSection guifg=#800000
 "----
 
 "minibuf---
-Bundle 'fholgado/minibufexpl.vim'
+"Bundle 'fholgado/minibufexpl.vim'
+Bundle 'jlanzarotta/bufexplorer'
+"let g:bufExplorerShowTabBuffer=1        " Yes.
+nnoremap <silent> <Tab> :BufExplorer<CR><CR>
 "----
 
 "bufkill---
 Bundle 'qpkorr/vim-bufkill'
 nmap <c-x> :BD<CR><CR>
+"----
+
+"---
+"Bundle 'winmanager'
+"let g:winManagerWindowLayout = 'FileExplorer|BufExplorer'
 "----
