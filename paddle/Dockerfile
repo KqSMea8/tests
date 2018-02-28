@@ -1,6 +1,6 @@
 FROM paddlepaddle/paddle:latest-dev
 
-RUN apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
+RUN apt-get update && apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
     man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format  iputils-ping python2.7-dbg
 
 RUN cd /root && \
@@ -27,12 +27,13 @@ RUN cd /root && \
     ./install.py --gocode-completer --clang-completer
     
 ENV GOROOT=/usr/local/go GOPATH=/root/go
+RUN mkdir -p /root/go/bin
 ENV PATH=${PATH}:${GOROOT}/bin:${GOPATH}/bin
 RUN curl -s -q https://glide.sh/get | sh
 RUN go get -u github.com/alecthomas/gometalinter 
 RUN gometalinter --install
 
-RUN pip -y install nltk scipy
+RUN pip  install nltk scipy
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
