@@ -40,7 +40,7 @@ using helloworld::HelloReply;
 using helloworld::Greeter;
 
 int g_payload_size = 0;
-int loop_times = 1000;
+int loop_times = 200;
 
 void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
     //const int max = 1 * 1024 * 1024;
     //for(int m=1024; m < max; m *= 2){
     ElapsedTime time(false);
-    g_payload_size = 2 * 1024 * 1024;
+    //g_payload_size = 2 * 1024 * 1024;
     HelloRequest request;
     GenRequest("hello", &request);
     for (int i = 0; i < loop_times; i++) {
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
     double total_time = time.GetElapsed();
     //std::cout << "total " << GetTimestamp() - ts << std::endl;
     printf("total:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
-            loop_times, g_payload_size / 1024.0, total_time,
+            loop_times, (g_payload_size / 1024.0), total_time,
             g_payload_size * 1.0 * (loop_times) / (1024.0 * total_time));
 
     //}
