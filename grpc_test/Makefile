@@ -18,15 +18,15 @@ HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
 CXX = g++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++11 -g
 ifeq ($(SYSTEM),Darwin)
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
            -lgrpc++_reflection\
-           -ldl
+           -ldl -g
 else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
-           -ldl
+           -ldl -g
 endif
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
@@ -41,7 +41,7 @@ all: server client  mem_timed
 client: helloworld.pb.o helloworld.grpc.pb.o client.o threadpool.o grpc_util.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-server: helloworld.pb.o helloworld.grpc.pb.o server.o
+server: helloworld.pb.o helloworld.grpc.pb.o server.o threadpool.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 mem_timed: mem_timed.o threadpool.o
