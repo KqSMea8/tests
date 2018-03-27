@@ -12,9 +12,8 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "paddle/fluid/framework/threadpool.h"
+#include "threadpool.h"
 
-#include "paddle/fluid/platform/enforce.h"
 
 namespace paddle {
 namespace framework {
@@ -31,9 +30,9 @@ void ThreadPool::Init() {
   if (threadpool_.get() == nullptr) {
     // TODO(Yancey1989): specify the max threads number
     int num_threads = std::thread::hardware_concurrency();
-    PADDLE_ENFORCE_GT(num_threads, 0);
-    // threadpool_.reset(new ThreadPool(num_threads));
-    threadpool_.reset(new ThreadPool(1));
+    // PADDLE_ENFORCE_GT(num_threads, 0);
+    threadpool_.reset(new ThreadPool(num_threads));
+    //threadpool_.reset(new ThreadPool(1));
   }
 }
 

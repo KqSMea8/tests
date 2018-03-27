@@ -59,33 +59,24 @@ class GreeterClient {
 
     // Assembles the client's payload and sends it to the server.
     void SayHello(const HelloRequest& request) {
-        //const int size = 3 * 1024 * 1024;
-        //char* payload_alloc = (char*)GenPayload(size);
-        //double ts = GetTimestamp();
-        // Call object to store rpc data
-        AsyncClientCall* call = new AsyncClientCall;
+        paddle::framework::Async([&request, this](){
+            AsyncClientCall* call = new AsyncClientCall;
 
-        // Data we are sending to the server.
-        //HelloRequest request;
-        //request.set_name(user);
-        //request.set_payload(payload_alloc, size);
-        //printf("time is %.2f ms\n", GetTimestamp() - ts);
-        //free(payload_alloc);
+            // stub_->PrepareAsyncSayHello() creates an RPC object, returning
+            // an instance to store in "call" but does not actually start the RPC
+            // Because we are using the asynchronous API, we need to hold on to
+            // the "call" instance in order to get updates on the ongoing RPC.
+            call->response_reader =
+                stub_->PrepareAsyncSayHello(&call->context, request, &cq_);
 
-        // stub_->PrepareAsyncSayHello() creates an RPC object, returning
-        // an instance to store in "call" but does not actually start the RPC
-        // Because we are using the asynchronous API, we need to hold on to
-        // the "call" instance in order to get updates on the ongoing RPC.
-        call->response_reader =
-            stub_->PrepareAsyncSayHello(&call->context, request, &cq_);
+            // StartCall initiates the RPC call
+            call->response_reader->StartCall();
 
-        // StartCall initiates the RPC call
-        call->response_reader->StartCall();
-
-        // Request that, upon completion of the RPC, "reply" be updated with the
-        // server's response; "status" with the indication of whether the operation
-        // was successful. Tag the request with the memory address of the call object.
-        call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+            // Request that, upon completion of the RPC, "reply" be updated with the
+            // server's response; "status" with the indication of whether the operation
+            // was successful. Tag the request with the memory address of the call object.
+            call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+        });
     }
 
     // Loop while listening for completed responses.

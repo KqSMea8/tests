@@ -36,13 +36,17 @@ PROTOS_PATH = ./
 
 vpath %.proto $(PROTOS_PATH)
 
-all: server client 
+all: server client  mem_timed
 
-client: helloworld.pb.o helloworld.grpc.pb.o client.o
+client: helloworld.pb.o helloworld.grpc.pb.o client.o threadpool.o grpc_util.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 server: helloworld.pb.o helloworld.grpc.pb.o server.o
 	$(CXX) $^ $(LDFLAGS) -o $@
+
+mem_timed: mem_timed.o threadpool.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
@@ -53,7 +57,7 @@ server: helloworld.pb.o helloworld.grpc.pb.o server.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h server client
+	rm -f *.o *.pb.cc *.pb.h server client mem_timed
 
 # The following is to test your system and ensure a smoother experience.
 # They are by no means necessary to actually compile a grpc-enabled software.
