@@ -155,38 +155,47 @@ class ServerImpl final {
     builder.RegisterService(&service_);
     // Get hold of the completion queue used for the asynchronous communication
     // with the gRPC runtime.
+    /*
     for(int i=0;i<1;i++){
         cqs_.push_back(builder.AddCompletionQueue());
         threads_.push_back(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
                                 cqs_[i].get())));
     }
+    */
+    auto cq0_ = builder.AddCompletionQueue();
+    auto cq1_ = builder.AddCompletionQueue();
+    auto cq2_ = builder.AddCompletionQueue();
 
-    //cq_ = builder.AddCompletionQueue();
-
-    //printf("cq_ len:%d\n", cq_.size());
-    // Finally assemble the server.
     server_ = builder.BuildAndStart();
+
+    thread0_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
+                                cq0_.get())));
+
+    thread1_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
+                                cq1_.get())));
+
+    thread2_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
+                                cq2_.get())));
+
+
+    // Finally assemble the server.
     std::cout << "Server listening on " << server_address << std::endl;
     server_->Wait();
-
-    // Proceed to the server's main loop.
-    /*
-    using namespace paddle::framework;
-    for(int i=0;i<8;i++){
-    Async([this](){
-            HandleRpcs();
-            });
-    }
-    */
+    thread0_->join();
   }
 
  private:
   // Class encompasing the state and logic needed to serve a request.
+  //
+  void RegistNew(::grpc::ServerCompletionQueue* cq){
+      std::unique_lock<std::mutex> lock(cq_mutex_);
+      new CallData(&service_, cq);
+  }
 
   // This can be run in multiple threads if needed.
   void HandleRpcs(::grpc::ServerCompletionQueue* cq) {
           printf("%ld\n", (int64_t)cq);
-        new CallData(&service_, cq);
+        RegistNew(cq);
         void* tag;  // uniquely identifies a request.
         bool ok;
         while (cq->Next(&tag, &ok)) {
@@ -203,7 +212,14 @@ class ServerImpl final {
   }
 
   //std::vector<std::unique_ptr<std::thread>> threads_;
-  std::vector<std::thread*> threads_;
+  //std::vector<std::thread*> threads_;
+  std::unique_ptr<std::thread> thread0_;
+  std::unique_ptr<std::thread> thread1_;
+  std::unique_ptr<std::thread> thread2_;
+
+  //mutex_lock l(shutdown_mu_);
+  std::mutex cq_mutex_;
+
   std::vector<std::unique_ptr<ServerCompletionQueue>> cqs_;
   detail::grpc::GrpcService::AsyncService service_;
   std::unique_ptr<Server> server_;
