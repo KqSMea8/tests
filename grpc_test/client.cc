@@ -24,6 +24,7 @@
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 #include <thread>
+#include "threadpool.h"
 
 #include "helloworld.grpc.pb.h"
 
@@ -159,6 +160,9 @@ class GreeterClient {
     CompletionQueue cq_;
 };
 
+void loop(int i){
+}
+
 int main(int argc, char** argv) {
     if (argc != 4){
           printf("cmd format:client ip port size");
@@ -210,6 +214,5 @@ int main(int argc, char** argv) {
     //}
 
     // std::cout << "Press control-c to quit" << std::endl << std::endl;
-
     return 0;
 }

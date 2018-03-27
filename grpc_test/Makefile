@@ -53,7 +53,7 @@ server: helloworld.pb.o helloworld.grpc.pb.o server.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h client.o server.o 
+	rm -f *.o *.pb.cc *.pb.h server client
 
 # The following is to test your system and ensure a smoother experience.
 # They are by no means necessary to actually compile a grpc-enabled software.
