@@ -38,12 +38,17 @@ using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Greeter;
 
-void* GenPayload(const size_t size) {
-    std::cout << "alloc " << size << std::endl;
-    return malloc(size);
-}
+const int g_payload_size = 0;
 
-int64_t ts;
+void GenRequest(int size, 
+        std::string user, HelloRequest* request){
+    char* payload_alloc = (char*)malloc(g_payload_size);
+
+    request.set_name(user);
+    request.set_payload(payload_alloc, size);
+
+    free(payload_alloc);
+}
 
 class GreeterClient {
   public:
@@ -51,23 +56,20 @@ class GreeterClient {
             : stub_(Greeter::NewStub(channel)) {}
 
     // Assembles the client's payload and sends it to the server.
-    void SayHello(const std::string& user) {
-        const int size = 3 * 1024 * 1024;
-        char* payload_alloc = (char*)GenPayload(size);
-
-        double ts = GetTimestamp();
-
+    void SayHello(const std::string& user, 
+            HelloRequest& request) {
+        //const int size = 3 * 1024 * 1024;
+        //char* payload_alloc = (char*)GenPayload(size);
+        //double ts = GetTimestamp();
         // Call object to store rpc data
         AsyncClientCall* call = new AsyncClientCall;
 
         // Data we are sending to the server.
-        HelloRequest request;
-        request.set_name(user);
-        request.set_payload(payload_alloc, size);
-
-        printf("time is %.2f ms\n", GetTimestamp() - ts);
-
-        free(payload_alloc);
+        //HelloRequest request;
+        //request.set_name(user);
+        //request.set_payload(payload_alloc, size);
+        //printf("time is %.2f ms\n", GetTimestamp() - ts);
+        //free(payload_alloc);
 
         // stub_->PrepareAsyncSayHello() creates an RPC object, returning
         // an instance to store in "call" but does not actually start the RPC
@@ -83,7 +85,6 @@ class GreeterClient {
         // server's response; "status" with the indication of whether the operation
         // was successful. Tag the request with the memory address of the call object.
         call->response_reader->Finish(&call->reply, &call->status, (void*)call);
-
     }
 
     // Loop while listening for completed responses.
@@ -92,6 +93,7 @@ class GreeterClient {
         void* got_tag;
         bool ok = false;
         int cq_count = 0;
+        double total_time = 0.0;
 
         // Block until the next result is available in the completion queue "cq".
         while (cq_.Next(&got_tag, &ok)) {
@@ -102,13 +104,20 @@ class GreeterClient {
             // corresponds solely to the request for updates introduced by Finish().
             GPR_ASSERT(ok);
 
-            if (call->status.ok())
+            if (call->status.ok()){
                 std::cout << "Greeter received: " << call->reply.message() << std::endl;
-            else
+            }
+            else{
                 std::cout << "RPC failed" << std::endl;
+                exit(1);
+            }
+
+            total_time += call->time.GetElapsed();
 
             if (cq_count == 99) {
-                std::cout << "total " << GetTimestamp() - ts << std::endl;
+                //std::cout << "total " << GetTimestamp() - ts << std::endl;
+                printf("total:%d time:%.2f speed:.2f\n", 
+                        g_payload_size * 1.0 * cq_count / (1024.0 * total_time));
             }
 
             // Once we're complete, deallocate the call object.
@@ -123,6 +132,8 @@ class GreeterClient {
     struct AsyncClientCall {
         // Container for the data we expect from the server.
         HelloReply reply;
+
+        ElapsedTime time;
 
         // Context for the client. It could be used to convey extra information to
         // the server and/or tweak certain RPC behaviors.
@@ -145,6 +156,16 @@ class GreeterClient {
 };
 
 int main(int argc, char** argv) {
+    if (argv != 3){
+          printf("cmd format:client ip port");
+          exit(1);
+      }
+
+      std::string ip = std::string(argv[1]);
+      int port = (int)argv[2];
+      char end_point[128];
+      snprintf(end_point, sizeof(end_point) -1, "%s:%d", ip.c_str(), port);
+      printf("server end_point:%s\n", end_point);
 
 
     // Instantiate the client. It requires a channel, out of which the actual RPCs
@@ -155,10 +176,9 @@ int main(int argc, char** argv) {
     args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
     args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
 
-    auto ch = std::shared_ptr<grpc::Channel>( grpc::CreateCustomChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials(), args));
+    auto ch = std::shared_ptr<grpc::Channel>( 
+            grpc::CreateCustomChannel(end_point, grpc::InsecureChannelCredentials(), args));
 
-    //GreeterClient greeter(grpc::CreateChannel(
-    //        "localhost:50051", grpc::InsecureChannelCredentials()));
     GreeterClient greeter(ch);
 
     // Spawn reader thread that loops indefinitely

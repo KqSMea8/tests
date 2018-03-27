@@ -1,6 +1,7 @@
 #pragma once
 #include <sys/time.h>
 #include <iostream>
+#include <string>
 
 class ElapsedTime {
 public:
@@ -13,11 +14,16 @@ public:
         std::thread::id this_id = std::this_thread::get_id();
         GetElapsed();
         if(print) {
-            std::stringstream ss;
-            ss << "time:" << t_wait_
-               << "ms, thread_id:" << this_id;
-            std::cout << ss.str() << std::endl;
+            std::cout << String() << std::endl;
         }
+    }
+
+    std::string String(){
+        std::stringstream ss;
+        ss << "time:" << t_wait_
+            << "ms, thread_id:" << this_id;
+
+        return ss.str();
     }
 
     double GetElapsed(){
