@@ -2,6 +2,8 @@
 #include <sys/time.h>
 #include <iostream>
 #include <string>
+#include <thread>
+#include <sstream>
 
 class ElapsedTime {
 public:
@@ -10,15 +12,16 @@ public:
         gettimeofday(&t0_, 0);
     }
 
-    virtual~ ElpasedTime() {
-        std::thread::id this_id = std::this_thread::get_id();
+    virtual~ ElapsedTime() {
         GetElapsed();
-        if(print) {
+        if(print_) {
             std::cout << String() << std::endl;
         }
     }
 
     std::string String(){
+        std::thread::id this_id = std::this_thread::get_id();
+
         std::stringstream ss;
         ss << "time:" << t_wait_
             << "ms, thread_id:" << this_id;
@@ -33,12 +36,9 @@ public:
         return t_wait_;
     }
 
-    void add
 private:
     bool print_;
     struct timeval t0_;
     struct timeval t1_;
     double t_wait_ = 0.0;
 };
-
-

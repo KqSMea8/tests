@@ -28,6 +28,7 @@
 #include "helloworld.grpc.pb.h"
 
 #include "grpc_util.h"
+#include "elapsed_time.h"
 
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
@@ -38,14 +39,14 @@ using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Greeter;
 
-const int g_payload_size = 0;
+int g_payload_size = 0;
+int loop_times = 1000;
 
-void GenRequest(int size, 
-        std::string user, HelloRequest* request){
+void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
 
-    request.set_name(user);
-    request.set_payload(payload_alloc, size);
+    request->set_name(user);
+    request->set_payload(payload_alloc, g_payload_size);
 
     free(payload_alloc);
 }
@@ -56,8 +57,7 @@ class GreeterClient {
             : stub_(Greeter::NewStub(channel)) {}
 
     // Assembles the client's payload and sends it to the server.
-    void SayHello(const std::string& user, 
-            HelloRequest& request) {
+    void SayHello(const HelloRequest& request) {
         //const int size = 3 * 1024 * 1024;
         //char* payload_alloc = (char*)GenPayload(size);
         //double ts = GetTimestamp();
@@ -93,7 +93,7 @@ class GreeterClient {
         void* got_tag;
         bool ok = false;
         int cq_count = 0;
-        double total_time = 0.0;
+        //double total_time = 0.0;
 
         // Block until the next result is available in the completion queue "cq".
         while (cq_.Next(&got_tag, &ok)) {
@@ -104,25 +104,29 @@ class GreeterClient {
             // corresponds solely to the request for updates introduced by Finish().
             GPR_ASSERT(ok);
 
+            cq_count++;
+
             if (call->status.ok()){
-                std::cout << "Greeter received: " << call->reply.message() << std::endl;
+                //std::cout << "Greeter received: " << call->reply.message() << std::endl;
             }
             else{
                 std::cout << "RPC failed" << std::endl;
                 exit(1);
             }
 
-            total_time += call->time.GetElapsed();
-
-            if (cq_count == 99) {
-                //std::cout << "total " << GetTimestamp() - ts << std::endl;
-                printf("total:%d time:%.2f speed:.2f\n", 
-                        g_payload_size * 1.0 * cq_count / (1024.0 * total_time));
-            }
-
+            //total_time += call->time.GetElapsed();
             // Once we're complete, deallocate the call object.
             delete call;
-            cq_count++;
+
+            if (cq_count == loop_times) {
+                //std::cout << "total " << GetTimestamp() - ts << std::endl;
+                /*
+                printf("total:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
+                        cq_count, g_payload_size / 1024.0, total_time,
+                        g_payload_size * 1.0 * (cq_count+1) / (1024.0 * total_time));
+                        */
+                return;
+            }
         }
     }
 
@@ -133,7 +137,7 @@ class GreeterClient {
         // Container for the data we expect from the server.
         HelloReply reply;
 
-        ElapsedTime time;
+        //std::unique_ptr<ElapsedTime> time;
 
         // Context for the client. It could be used to convey extra information to
         // the server and/or tweak certain RPC behaviors.
@@ -156,13 +160,15 @@ class GreeterClient {
 };
 
 int main(int argc, char** argv) {
-    if (argv != 3){
-          printf("cmd format:client ip port");
+    if (argc != 4){
+          printf("cmd format:client ip port size");
           exit(1);
       }
 
+      g_payload_size = atoi(argv[3]);
+
       std::string ip = std::string(argv[1]);
-      int port = (int)argv[2];
+      int port = atoi(argv[2]);
       char end_point[128];
       snprintf(end_point, sizeof(end_point) -1, "%s:%d", ip.c_str(), port);
       printf("server end_point:%s\n", end_point);
@@ -183,15 +189,27 @@ int main(int argc, char** argv) {
 
     // Spawn reader thread that loops indefinitely
     std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
-    ts = GetTimestamp();
 
-    for (int i = 0; i < 100; i++) {
-        std::string user("world " + std::to_string(i));
-        greeter.SayHello(user);  // The actual RPC call!
+    //const int max = 1 * 1024 * 1024;
+    //for(int m=1024; m < max; m *= 2){
+    ElapsedTime time(false);
+    g_payload_size = 2 * 1024 * 1024;
+    HelloRequest request;
+    GenRequest("hello", &request);
+    for (int i = 0; i < loop_times; i++) {
+        greeter.SayHello(request);  // The actual RPC call!
     }
-
-    std::cout << "Press control-c to quit" << std::endl << std::endl;
     thread_.join();  //blocks forever
+
+    double total_time = time.GetElapsed();
+    //std::cout << "total " << GetTimestamp() - ts << std::endl;
+    printf("total:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
+            loop_times, g_payload_size / 1024.0, total_time,
+            g_payload_size * 1.0 * (loop_times) / (1024.0 * total_time));
+
+    //}
+
+    // std::cout << "Press control-c to quit" << std::endl << std::endl;
 
     return 0;
 }
