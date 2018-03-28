@@ -40,6 +40,8 @@ using helloworld::Greeter;
 
 using namespace paddle::operators;
 
+int g_thread_num=0;
+
 std::unique_ptr<::grpc::ByteBuffer> SerializeToByteBuffer(
     ::grpc::protobuf::Message* message) {
   ::grpc::string buf;
@@ -158,13 +160,13 @@ class ServerImpl final {
     builder.RegisterService(&service_);
     // Get hold of the completion queue used for the asynchronous communication
     // with the gRPC runtime.
-    for(int i=0;i<8;i++){
+    for(int i=0;i<g_thread_num;i++){
         cqs_.push_back(builder.AddCompletionQueue());
     }
 
     server_ = builder.BuildAndStart();
 
-    for(int i=0;i<8;i++){
+    for(int i=0;i<g_thread_num;i++){
         threads_.push_back(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,cqs_[i].get())));
     }
 
@@ -211,7 +213,15 @@ class ServerImpl final {
 };
 
 int main(int argc, char** argv) {
+    if(argc != 3){
+        printf("format:exe port thread_num\n");
+        exit(0);
+    }
+
   int port=atoi(argv[1]);
+  g_thread_num=atoi(argv[2]);
+  printf("port:%d thread_num:%d\n", port, g_thread_num);
+
   ServerImpl server;
   server.Run(port);
 

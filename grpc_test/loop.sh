@@ -11,7 +11,7 @@
 #done
 
 
-for i in {10..15}
+for i in {10..11}
 do
     ./server 500$i > /dev/null &
     ./client 0.0.0.0 500$i 1048576  > $i.log &

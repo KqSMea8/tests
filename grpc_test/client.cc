@@ -54,11 +54,13 @@ void GenRequest(std::string user, HelloRequest* request){
 
 class GreeterClient {
   public:
-    explicit GreeterClient(std::shared_ptr<Channel> channel)
-            : stub_(Greeter::NewStub(channel)) {}
+    explicit GreeterClient()
+            //: stub_(Greeter::NewStub(channel)) 
+            {}
 
     // Assembles the client's payload and sends it to the server.
-    void SayHello(const HelloRequest& request) {
+    void SayHello(const HelloRequest& request, std::unique_ptr<Greeter::Stub> stub) {
+        stub_ = std::move(stub);
         paddle::framework::Async([&request, this](){
             AsyncClientCall* call = new AsyncClientCall;
 
@@ -177,7 +179,15 @@ int main(int argc, char** argv) {
     auto ch = std::shared_ptr<grpc::Channel>( 
             grpc::CreateCustomChannel(end_point, grpc::InsecureChannelCredentials(), args));
 
-    GreeterClient greeter(ch);
+    std::vector<std::shared_ptr<grpc::Channel>> chs;
+      //for(int i=0;i<2;i++){
+    //std::string end_point0="0.0.0.0:50001";
+          chs.push_back(grpc::CreateCustomChannel(end_point, grpc::InsecureChannelCredentials(), args));
+     //     std::string end_point1="0.0.0.0:50002";
+      //    chs.push_back(grpc::CreateCustomChannel(end_point1, grpc::InsecureChannelCredentials(), args));
+      //}
+
+    GreeterClient greeter;
 
     // Spawn reader thread that loops indefinitely
     std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
@@ -188,8 +198,11 @@ int main(int argc, char** argv) {
     //g_payload_size = 2 * 1024 * 1024;
     HelloRequest request;
     GenRequest("hello", &request);
+
+    //std::vector<std::unique_ptr<Greeter::Stub>> stubs;
     for (int i = 0; i < loop_times; i++) {
-        greeter.SayHello(request);  // The actual RPC call!
+        greeter.SayHello(request, Greeter::NewStub(chs[0]));  // The actual RPC call!
+        //greeter.SayHello(request, Greeter::NewStub(chs[1]));  // The actual RPC call!
     }
     thread_.join();  //blocks forever
 
