@@ -41,7 +41,7 @@ using helloworld::HelloReply;
 using helloworld::Greeter;
 
 int g_payload_size = 0;
-int loop_times = 100;
+int loop_times = 1000;
 
 void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
@@ -150,9 +150,6 @@ class GreeterClient {
     // gRPC runtime.
     CompletionQueue cq_;
 };
-
-void loop(int i){
-}
 
 int main(int argc, char** argv) {
     if (argc != 4){

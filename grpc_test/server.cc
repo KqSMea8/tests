@@ -70,7 +70,7 @@ std::unique_ptr<::grpc::ByteBuffer> SerializeToByteBuffer(
         // the tag uniquely identifying the request (so that different CallData
         // instances can serve different requests concurrently), in this case
         // the memory address of this CallData instance.
-        printf("CREATE");
+        //printf("CREATE");
         //service_->RequestSayHello(&ctx_, &request_, &responder_, cq_, cq_,
         //                         this);
         int method_id = static_cast<int>(detail::GrpcMethod::kSayHello);
@@ -142,8 +142,11 @@ class ServerImpl final {
   }
 
   // There is no shutdown handling in this code.
-  void Run() {
-    std::string server_address("0.0.0.0:50051");
+  void Run(int port) {
+    //std::string server_address("0.0.0.0:50051");
+    char tmp[128];
+    snprintf(tmp, sizeof(tmp), "0.0.0.0:%d", port);
+    std::string server_address = tmp;
 
     ServerBuilder builder;
     // Listen on the given address without any authentication mechanism.
@@ -155,33 +158,20 @@ class ServerImpl final {
     builder.RegisterService(&service_);
     // Get hold of the completion queue used for the asynchronous communication
     // with the gRPC runtime.
-    /*
-    for(int i=0;i<1;i++){
+    for(int i=0;i<8;i++){
         cqs_.push_back(builder.AddCompletionQueue());
-        threads_.push_back(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
-                                cqs_[i].get())));
     }
-    */
-    auto cq0_ = builder.AddCompletionQueue();
-    auto cq1_ = builder.AddCompletionQueue();
-    auto cq2_ = builder.AddCompletionQueue();
 
     server_ = builder.BuildAndStart();
 
-    thread0_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
-                                cq0_.get())));
-
-    thread1_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
-                                cq1_.get())));
-
-    thread2_.reset(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,
-                                cq2_.get())));
-
+    for(int i=0;i<8;i++){
+        threads_.push_back(new std::thread(std::bind(&ServerImpl::HandleRpcs, this,cqs_[i].get())));
+    }
 
     // Finally assemble the server.
     std::cout << "Server listening on " << server_address << std::endl;
     server_->Wait();
-    thread0_->join();
+    //thread0_->join();
   }
 
  private:
@@ -194,7 +184,6 @@ class ServerImpl final {
 
   // This can be run in multiple threads if needed.
   void HandleRpcs(::grpc::ServerCompletionQueue* cq) {
-          printf("%ld\n", (int64_t)cq);
         RegistNew(cq);
         void* tag;  // uniquely identifies a request.
         bool ok;
@@ -206,18 +195,14 @@ class ServerImpl final {
           // tells us whether there is any kind of event or cq is shutting down.
           //GPR_ASSERT(cq_[i].get()->Next(&tag, &ok));
           
+          //printf("cq:%ld thread_id:%ld\n", (int64_t)cq, std::this_thread::get_id());
+            std::cout << (int64_t)cq << "," << std::this_thread::get_id() << std::endl;
           GPR_ASSERT(ok);
           static_cast<CallData*>(tag)->Proceed();
      }
   }
 
-  //std::vector<std::unique_ptr<std::thread>> threads_;
-  //std::vector<std::thread*> threads_;
-  std::unique_ptr<std::thread> thread0_;
-  std::unique_ptr<std::thread> thread1_;
-  std::unique_ptr<std::thread> thread2_;
-
-  //mutex_lock l(shutdown_mu_);
+  std::vector<std::thread*> threads_;
   std::mutex cq_mutex_;
 
   std::vector<std::unique_ptr<ServerCompletionQueue>> cqs_;
@@ -226,8 +211,9 @@ class ServerImpl final {
 };
 
 int main(int argc, char** argv) {
+  int port=atoi(argv[1]);
   ServerImpl server;
-  server.Run();
+  server.Run(port);
 
   return 0;
 }
