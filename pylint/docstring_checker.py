@@ -13,7 +13,10 @@ def register(linter):
 class Docstring(object):
     def __init__(self):
         from collections import defaultdict
-        self.d = defaultdict(list)
+        self.d = defaultdict(list) #name->[]
+        self.d['Args']=[]
+        self.d['Examples']=[]
+        self.d['Returns']=[]
         self.args={} #arg_name->arg_type
 
     def get_level(self, string, indent='    '):
@@ -55,14 +58,14 @@ class Docstring(object):
         self._arg_with_type()
         return True
     
-    def returns():
-        return d['Returns']
+    def get_returns(self):
+        return self.d['Returns']
 
-    def raises():
-        return d['Raises']
+    def get_raises(self):
+        return self.d['Raises']
 
-    def examples():
-        return d['Examples']
+    def get_examples(self):
+        return self.d['Examples']
 
     def _arg_with_type(self):
         import re
@@ -100,23 +103,37 @@ class DocstringChecker(BaseChecker):
             'W9005': ('Missing docstring or docstring is too shorter',
                       symbol+"-missing",
                       'Add docstring longer >=10'),
-            'W9006': ('docstring indent error, use 4 space for indent',
+            'W9006': ('Docstring indent error, use 4 space for indent',
                       symbol+"-indent-error",
                       'Use 4 space for indent'),
+            'W9007': ('You should add `Returns` at comments',
+                      symbol+"-with-returns",
+                      'There should be a `Returns` section in comments'),
             }
     options = ()
 
     def visit_functiondef(self, node):
-        self._check_doc_string(node)
-        self.all_args_in_doc(node)
+        self.check_doc_string(node)
+
+        if len(node.body) <= 10:
+            return True
+
+        if not node.doc:
+            return True
+
+        doc = Docstring()
+        doc.parse(node.doc)
+
+        self.all_args_in_doc(node, doc)
+        self.with_returns(node, doc)
 
     def visit_module(self, node):
-        self._check_doc_string(node)
+        self.check_doc_string(node)
 
     def visit_classdef(self, node):
-        self._check_doc_string(node)
+        self.check_doc_string(node)
 
-    def _check_doc_string(self, node):
+    def check_doc_string(self, node):
         self.missing_doc_string(node)
         self.one_line_one_one_line(node)
         self.has_period(node)
@@ -177,15 +194,26 @@ class DocstringChecker(BaseChecker):
 
         return True
 
+    def with_returns(self, node, doc):
+        find = False
+        for t in node.body:
+            if not isinstance(t, astroid.Return):
+                continue
 
-    def all_args_in_doc(self,node):
+            find = True
+            break
+
+        if not find:
+            return True
+
+        if len(doc.get_returns()) == 0:
+            self.add_message('W9007', node=node, line=node.fromlineno)
+            return False
+
+        return True
+
+    def all_args_in_doc(self,node, doc):
         """All function arguments are mentioned in doc"""
-        if len(node.body) <= 10:
-            return True
-
-        if not node.doc:
-            return True
-
         args=[]
         for arg in node.args.get_children():
             if (not isinstance(arg, astroid.AssignName)) \
@@ -196,8 +224,6 @@ class DocstringChecker(BaseChecker):
         if len(args) <= 0:
             return True
 
-        doc = Docstring()
-        doc.parse(node.doc)
         parsed_args = doc.args
         #print parsed_args
         if len(args) > 0 and len(parsed_args) <= 0:
@@ -219,8 +245,6 @@ class DocstringChecker(BaseChecker):
         doc = node.doc.strip()
         if doc.endswith('"""') and doc.startswith('"""'): 
             return True
-        else: 
-            self.add_message('W9004', node=node, line=node.fromlineno)
-            return False
 
-        return True
+        self.add_message('W9004', node=node, line=node.fromlineno)
+        return False

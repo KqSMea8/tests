@@ -43,5 +43,7 @@ def get_new_one(mean, scale=1.0):
     _mean = scale
     _mean = scale
     _mean = scale
+    raise ValueError('A very specific bad thing happened.')
+    return 5
 
    
