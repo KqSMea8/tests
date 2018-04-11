@@ -8,12 +8,27 @@ class C():
     pass
 
 def get_new_one(mean, scale=1.0):
-    """get_new_ one2
+
+    """ get_new_ 
+ one2
+
     """
-    _mean = scale
-    _mean = scale
+
+
+
+
+
+
+
+
+
+
+
+    #nihao
+
+    def sub_new():
+        pass
+
     _mean = scale
 
-    def a(mean):
-        _mean=mean
-
+   
