@@ -164,13 +164,13 @@ class DocstringChecker(BaseChecker):
         return True
 
     def one_line_one_one_line(self,node):
-        """One line docs (len < 80) are on one line"""
+        """One line docs (len < 40) are on one line"""
 
         doc = node.doc
         if doc is None:
             return True
 
-        if len(doc) > 80: 
+        if len(doc) > 40: 
             return True
         elif sum(doc.find(nl) for nl in ('\n', '\r', '\n\r')) == -3: 
             return True
