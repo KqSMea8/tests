@@ -11,7 +11,6 @@ def get_new_one(mean, scale=1.0):
     """get_new_ 
     Args:
         scale(int): 1.0
-        mean(int): 2.0
   one2
 
     """

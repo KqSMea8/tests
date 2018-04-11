@@ -95,9 +95,6 @@ class DocstringChecker(BaseChecker):
             'W9003': ('All args with their types must be mentioned in doc string',
                       symbol+"-with-all-args",
                       'Used when not all arguments are in the doc string '),
-            'W9004': ('triple quotes',
-                      symbol+"-triple-quotes",
-                      'Used when doc string does not use """'),
             'W9005': ('Missing docstring or docstring is too shorter',
                       symbol+"-missing",
                       'Add docstring longer >=10'),
@@ -116,7 +113,7 @@ class DocstringChecker(BaseChecker):
     def visit_functiondef(self, node):
         self.check_doc_string(node)
 
-        if len(node.body) <= 10:
+        if node.tolineno - node.fromlineno <= 10:
             return True
 
         if not node.doc:
@@ -139,11 +136,10 @@ class DocstringChecker(BaseChecker):
         self.missing_doc_string(node)
         self.one_line_one_one_line(node)
         self.has_period(node)
-        self.triple_quotes(node)
         self.indent_style(node)
 
     def missing_doc_string(self, node):
-        if len(node.body) <= 10:
+        if node.tolineno - node.fromlineno <= 10:
             return True
 
         if node.doc is None or len(node.doc) < 10:
@@ -255,14 +251,4 @@ class DocstringChecker(BaseChecker):
 
         return True
 
-    def triple_quotes(self,node): #This would need a raw checker to work b/c the AST doesn't use """
-        """Doc string uses tripple quotes"""
-        if node.doc is None:
-            return True
 
-        doc = node.doc.strip()
-        if doc.endswith('"""') and doc.startswith('"""'): 
-            return True
-
-        self.add_message('W9004', node=node, line=node.fromlineno)
-        return False
