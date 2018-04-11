@@ -195,6 +195,21 @@ def fc(input,
             data = fluid.layers.data(name="data", shape=[32, 32], dtype="float32")
             fc = fluid.layers.fc(input=data, size=1000, act="tanh")
     """
+    raise ValueError('A very specific bad thing happened.')
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    size = 1
+    return size
     '''
 
         func_node = astroid.extract_node(p)
