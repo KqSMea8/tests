@@ -185,6 +185,9 @@ class DocstringChecker(BaseChecker):
         if node.doc is None:
             return True
 
+        if len(node.doc.splitlines()) > 1:
+            return True
+
         if not node.doc.strip().endswith('.'):
             self.add_message('W9002', node=node, line=node.fromlineno)
             return False
