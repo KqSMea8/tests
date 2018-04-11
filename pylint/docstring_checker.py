@@ -48,13 +48,11 @@ class Docstring(object):
             else:
                 if level > state[1]:
                     self.d[state[0]].append(c)
-                    #print self.d
                     continue
 
                 state = ("others", -1)
                 self.d[state[0]].append(c)
 
-        #print self.d
         self._arg_with_type()
         return True
     
@@ -162,7 +160,6 @@ class DocstringChecker(BaseChecker):
         lines = doc.splitlines()
 
         for l in lines:
-            #print l
             cur_indent = len(l) - len(l.lstrip())
             if cur_indent % indent != 0:
                 self.add_message('W9006', node=node, line=node.fromlineno)
@@ -247,7 +244,6 @@ class DocstringChecker(BaseChecker):
             return True
 
         parsed_args = doc.args
-        #print parsed_args
         if len(args) > 0 and len(parsed_args) <= 0:
             self.add_message('W9003', node=node, line=node.fromlineno)
             return False
