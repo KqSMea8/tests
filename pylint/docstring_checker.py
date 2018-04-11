@@ -128,7 +128,7 @@ class DocstringChecker(BaseChecker):
             return True
 
         if node.doc is None or len(node.doc) < 10:
-            self.add_message('W9005', node=node, line=node.tolineno)
+            self.add_message('W9005', node=node, line=node.fromlineno)
         return False
 
     # FIXME(gongwb): give the docstring line-no
@@ -161,7 +161,7 @@ class DocstringChecker(BaseChecker):
         elif sum(doc.find(nl) for nl in ('\n', '\r', '\n\r')) == -3: 
             return True
         else:
-            self.add_message('W9001', node=node, line=node.tolineno)
+            self.add_message('W9001', node=node, line=node.fromlineno)
             return False
 
         return True
@@ -172,7 +172,7 @@ class DocstringChecker(BaseChecker):
             return True
 
         if not node.doc.strip().endswith('.'):
-            self.add_message('W9002', node=node, line=node.tolineno)
+            self.add_message('W9002', node=node, line=node.fromlineno)
             return False
 
         return True
@@ -220,7 +220,7 @@ class DocstringChecker(BaseChecker):
         if doc.endswith('"""') and doc.startswith('"""'): 
             return True
         else: 
-            self.add_message('W9004', node=node, line=node.tolineno)
+            self.add_message('W9004', node=node, line=node.fromlineno)
             return False
 
         return True
