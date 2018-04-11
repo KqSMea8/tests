@@ -56,7 +56,7 @@ class DocstringChecker(BaseChecker):
         self.one_line_one_one_line(node)
         self.has_period(node)
         self.triple_quotes(node)
-        self.indent(node)
+        self.indent_style(node)
 
     def missing_doc_string(self, node):
         if len(node.body) <= 10:
@@ -67,44 +67,22 @@ class DocstringChecker(BaseChecker):
         return False
 
     # FIXME(gongwb): give the docstring line-no
-    def indent(self, node, indent=4):
+    def indent_style(self, node, indent=4):
         """check doc string indent style"""
         if node.doc is None:
             return True
 
         doc = node.doc
         lines = doc.splitlines()
-        last_indent = -1
-        cur_indent = -1
-        first_indent = -1
-
-        print(help(node))
 
         for l in lines:
-            if len(l.strip()) == 0:
-                continue
-
+            print l
             cur_indent = len(l) - len(l.lstrip())
-
-            if first_indent < 0:
-                first_indent = cur_indent
-
             if cur_indent % indent != 0:
                 self.add_message('W9006', node=node, line=node.fromlineno)
-                last_indent = cur_indent
                 return False
 
-            if cur_indent < first_indent:
-                self.add_message('W9006', node=node, line=node.fromlineno)
-                last_indent = cur_indent
-                return False
-
-            if last_indent >= 0 and abs(cur_indent - last_indent) > indent:
-                self.add_message('W9006', node=node, line=node.fromlineno)
-                last_indent = cur_indent
-                return False
-
-            last_indent = cur_indent
+        return True
 
     def one_line_one_one_line(self,node):
         """One line docs (len < 80) are on one line"""

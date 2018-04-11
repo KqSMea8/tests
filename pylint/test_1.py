@@ -8,9 +8,8 @@ class C():
     pass
 
 def get_new_one(mean, scale=1.0):
-
-    """ get_new_ 
- one2
+    """get_new_ 
+  one2
 
     """
 
