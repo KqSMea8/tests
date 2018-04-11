@@ -25,7 +25,7 @@ class DocstringChecker(BaseChecker):
             'W9002': ('Doc string does not end with "." period',
                       symbol+"-end-with",
                       'Used when a doc string does not end with a period'),
-            'W9003': ('Not all args mentioned in doc string',
+            'W9003': ('All args with their types must be mentioned in doc string',
                       symbol+"-with-all-args",
                       'Used when not all arguments are in the doc string '),
             'W9004': ('triple quotes',
@@ -42,14 +42,13 @@ class DocstringChecker(BaseChecker):
 
     def visit_functiondef(self, node):
         self._check_doc_string(node)
-        #self.all_args_in_doc(node)
+        self.all_args_in_doc(node)
 
     def visit_module(self, node):
         self._check_doc_string(node)
 
     def visit_classdef(self, node):
         self._check_doc_string(node)
-        #self.all_args_in_doc(node)
 
     def _check_doc_string(self, node):
         self.missing_doc_string(node)
@@ -112,16 +111,60 @@ class DocstringChecker(BaseChecker):
 
         return True
 
+    def _parse(self, node):
+        from collections import defaultdict
+        d = defaultdict(list)
+
+        lines = node.doc.splitlines()
+        state = "others"
+        for l in lines:
+            c = l.strip()
+            if len(c) <= 0:
+                continue
+
+            print c, state
+            if c.startswith("Args:"):
+                state = "Args"
+                continue
+            elif c.startswith("Returns:"):
+                state = "Returns"
+                continue
+            elif c.startswith("Raises:"):
+                state = "Raises"
+                continue
+            elif c.startswith("Examples:"):
+                state = "Examples"
+                continue
+            else:
+                state = "others"
+
+            d[state].append(c)
+
+        return d
+
+    def _arg_with_type(self, d):
+        import re
+
+        args={} #arg_name->arg_type
+        for t in d['Args']:
+            m = re.search('([A-Za-z0-9]+)\s?(\(.+\)):', t)
+            if m:
+                args[m.group[1]] = m.group[2]
+
+        return args
+
+
     def all_args_in_doc(self,node):
         """All function arguments are mentioned in doc"""
-
         if len(node.body) <= 10:
             return True
 
-        '''
+        if not node.doc:
+            return True
+
         args=[]
         for arg in node.args.get_children():
-            if not isinstance(arg, astroid.AssignName) 
+            if (not isinstance(arg, astroid.AssignName)) \
                 or arg.name == "self":
                     continue
             args.append(arg.name)
@@ -129,22 +172,20 @@ class DocstringChecker(BaseChecker):
         if len(args) <= 0:
             return True
 
-        kvs = {}
-        lines = node.doc.splitlines()
-        for l in lines:
-            kv = l.trip().split(":", 1)
-            if len(kv) <= 1:
-                continue
-            kvs[kv[0]] = kvs[kv[1]]
-
-        if "Args:" not in kvs:
+        d = self._parse(node)
+        print d
+        if len(args) > 0 and len(d['Args']) <= 0:
+            self.add_message('W9003', node=node, line=node.tolineno)
             return False
 
-        for arg in args:
-            if arg+" (" not in kvs:
+        parsed_args = self._arg_with_type(d)
+        print parsed_args
+        for t in args:
+            if t not in parsed_args:
                 self.add_message('W9003', node=node, line=node.tolineno)
-        return False
-        '''
+                return False
+
+        return True
 
     def triple_quotes(self,node): #This would need a raw checker to work b/c the AST doesn't use """
         """Doc string uses tripple quotes"""
