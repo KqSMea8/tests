@@ -69,7 +69,7 @@ class Docstring(object):
         import re
 
         for t in self.d['Args']:
-            m = re.search('([A-Za-z0-9_]+)\s{0,4}(\(.+\)):', t)
+            m = re.search('([A-Za-z0-9_-]+)\s{0,4}(\(.+\)):', t)
             if m:
                 self.args[m.group(1)] = m.group(2)
 
@@ -248,10 +248,11 @@ class DocstringChecker(BaseChecker):
             return False
 
         for t in args:
-            if t not in parsed_args:
-                print(t, "not in ", parsed_args)
+            if t not in parsed_args: 
+                print(t, " with (type) not in ", parsed_args)
                 self.add_message('W9003', node=node, line=node.fromlineno)
                 return False
+
 
         return True
 
