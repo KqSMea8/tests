@@ -10,6 +10,72 @@ def register(linter):
     """Register checkers."""
     linter.register_checker(DocstringChecker(linter))
 
+class Docstring(object):
+    def __init__(self):
+        from collections import defaultdict
+        self.d = defaultdict(list)
+        self.args={} #arg_name->arg_type
+
+    def get_level(self, string, indent='    '):
+        level = 0
+        unit_size = len(indent)
+        while string[:unit_size] == indent:
+            string = string[unit_size:]
+            level += 1
+
+        return level
+
+    def parse(self, doc):
+        lines = doc.splitlines()
+        state = ("others", -1)
+        for l in lines:
+            c = l.strip()
+            if len(c) <= 0:
+                continue
+        
+            level = self.get_level(l)
+            if c.startswith("Args:"):
+                state = ("Args", level)
+            elif c.startswith("Returns:"):
+                state = ("Returns", level)
+            elif c.startswith("Raises:"):
+                state = ("Raises", level)
+            elif c.startswith("Examples:"):
+                state = ("Examples", level)
+            else:
+                if level > state[1]:
+                    self.d[state[0]].append(c)
+                    #print self.d
+                    continue
+
+                state = ("others", -1)
+                self.d[state[0]].append(c)
+
+        #print self.d
+        self._arg_with_type()
+        return True
+    
+    def returns():
+        return d['Returns']
+
+    def raises():
+        return d['Raises']
+
+    def examples():
+        return d['Examples']
+
+    def _arg_with_type(self):
+        import re
+
+        for t in self.d['Args']:
+            m = re.search('([A-Za-z0-9]+)\s?(\(.+\)):', t)
+            if m:
+                self.args[m.group(1)] = m.group(2)
+
+        return self.args
+
+
+
 class DocstringChecker(BaseChecker):
     __implements__ = (IAstroidChecker,)
 
@@ -75,7 +141,7 @@ class DocstringChecker(BaseChecker):
         lines = doc.splitlines()
 
         for l in lines:
-            print l
+            #print l
             cur_indent = len(l) - len(l.lstrip())
             if cur_indent % indent != 0:
                 self.add_message('W9006', node=node, line=node.fromlineno)
@@ -111,48 +177,6 @@ class DocstringChecker(BaseChecker):
 
         return True
 
-    def _parse(self, node):
-        from collections import defaultdict
-        d = defaultdict(list)
-
-        lines = node.doc.splitlines()
-        state = "others"
-        for l in lines:
-            c = l.strip()
-            if len(c) <= 0:
-                continue
-
-            print c, state
-            if c.startswith("Args:"):
-                state = "Args"
-                continue
-            elif c.startswith("Returns:"):
-                state = "Returns"
-                continue
-            elif c.startswith("Raises:"):
-                state = "Raises"
-                continue
-            elif c.startswith("Examples:"):
-                state = "Examples"
-                continue
-            else:
-                state = "others"
-
-            d[state].append(c)
-
-        return d
-
-    def _arg_with_type(self, d):
-        import re
-
-        args={} #arg_name->arg_type
-        for t in d['Args']:
-            m = re.search('([A-Za-z0-9]+)\s?(\(.+\)):', t)
-            if m:
-                args[m.group[1]] = m.group[2]
-
-        return args
-
 
     def all_args_in_doc(self,node):
         """All function arguments are mentioned in doc"""
@@ -172,17 +196,17 @@ class DocstringChecker(BaseChecker):
         if len(args) <= 0:
             return True
 
-        d = self._parse(node)
-        print d
-        if len(args) > 0 and len(d['Args']) <= 0:
-            self.add_message('W9003', node=node, line=node.tolineno)
+        doc = Docstring()
+        doc.parse(node.doc)
+        parsed_args = doc.args
+        #print parsed_args
+        if len(args) > 0 and len(parsed_args) <= 0:
+            self.add_message('W9003', node=node, line=node.fromlineno)
             return False
 
-        parsed_args = self._arg_with_type(d)
-        print parsed_args
         for t in args:
             if t not in parsed_args:
-                self.add_message('W9003', node=node, line=node.tolineno)
+                self.add_message('W9003', node=node, line=node.fromlineno)
                 return False
 
         return True
