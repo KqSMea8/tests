@@ -106,9 +106,12 @@ class DocstringChecker(BaseChecker):
             'W9006': ('Docstring indent error, use 4 space for indent',
                       symbol+"-indent-error",
                       'Use 4 space for indent'),
-            'W9007': ('You should add `Returns` at comments',
+            'W9007': ('You should add `Returns` in comments',
                       symbol+"-with-returns",
                       'There should be a `Returns` section in comments'),
+            'W9008': ('You should add `Raises` section in comments',
+                      symbol+"-with-raises",
+                      'There should be a `Raises` section in comments'),
             }
     options = ()
 
@@ -126,6 +129,7 @@ class DocstringChecker(BaseChecker):
 
         self.all_args_in_doc(node, doc)
         self.with_returns(node, doc)
+        self.with_raises(node, doc)
 
     def visit_module(self, node):
         self.check_doc_string(node)
@@ -190,6 +194,24 @@ class DocstringChecker(BaseChecker):
 
         if not node.doc.strip().endswith('.'):
             self.add_message('W9002', node=node, line=node.fromlineno)
+            return False
+
+        return True
+
+    def with_raises(self, node, doc):
+        find = False
+        for t in node.body:
+            if not isinstance(t, astroid.Raise):
+                continue
+
+            find = True
+            break
+
+        if not find:
+            return True
+
+        if len(doc.get_raises()) == 0:
+            self.add_message('W9008', node=node, line=node.fromlineno)
             return False
 
         return True
