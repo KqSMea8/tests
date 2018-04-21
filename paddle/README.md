@@ -30,7 +30,7 @@ nvidia-docker run -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfi
 ```
 export CUDA_SO="$(\ls /usr/lib64/libcuda* | xargs -I{} echo '-v {}:{}') $(\ls /usr/lib64/libnvidia* | xargs -I{} echo '-v {}:{}')"
 export DEVICES=$(\ls /dev/nvidia* | xargs -I{} echo '--device {}:{}')
-docker run ${CUDA_SO} ${DEVICES} -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev
+docker run ${CUDA_SO} ${DEVICES} -d -p 2202:22 --name gwbpaddle  --security-opt seccomp=unconfined -it -v ~/go/src/github.com/PaddlePaddle/Paddle:/paddle -v ~/go:/root/go  gongweibao/paddledev /bin/bash
 ```
 
 ## 登陆镜像
