@@ -170,7 +170,7 @@ std::vector<std::string> split(std::string endpoints){
 
 int main(int argc, char** argv) {
     if (argc != 4){
-          printf("cmd format:client <ip:port> g_loop_times size");
+          printf("cmd format:client <ip:port> loop_times size\n");
           exit(1);
       }
 
