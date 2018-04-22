@@ -1,5 +1,3 @@
-"""Checker for unneccessary use of str() in format() arguments."""
-
 import six
 import astroid
 
@@ -244,13 +242,13 @@ class DocstringChecker(BaseChecker):
 
         parsed_args = doc.args
         if len(args) > 0 and len(parsed_args) <= 0:
-            print("debug:parsed args: ", parsed_args)
+            print "debug:parsed args: ", parsed_args 
             self.add_message('W9003', node=node, line=node.fromlineno)
             return False
 
         for t in args:
             if t not in parsed_args: 
-                print(t, " with (type) not in ", parsed_args)
+                print "args:", t, " with (type) not in ", parsed_args
                 self.add_message('W9003', node=node, line=node.fromlineno)
                 return False
 

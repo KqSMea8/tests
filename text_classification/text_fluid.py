@@ -158,20 +158,20 @@ def main(dict_path):
             train_pass_acc_evaluator.reset()
             start_time = time.time()
             total_samples = 0
-            with profiler.profiler("CPU", 'total', profile_path='./profile_res_%d' % trainer_id) as prof:
-                for batch_id, data in enumerate(train_reader()):
-                    batch_start = time.time()
-                    cost_val, acc_val, size_val = exe.run(
-                        train_program,
-                        feed=feeder.feed(data),
-                        fetch_list=[avg_cost, batch_acc_var, batch_size_var])
-                    train_pass_acc_evaluator.add(value=acc_val, weight=size_val)
-                    total_samples += float(size_val)
-                    if batch_id and batch_id % conf.log_period == 0:
-                        print("Pass id: %d, batch id: %d, cost: %f, pass_acc: %f, speed: %f, time: %f" %
-                            (pass_id, batch_id, cost_val,
-                            train_pass_acc_evaluator.eval(),
-                            float(size_val) / (time.time() - batch_start), time.time() - batch_start))
+            #with profiler.profiler("CPU", 'total', profile_path='./profile_res_%d' % trainer_id) as prof:
+            for batch_id, data in enumerate(train_reader()):
+                batch_start = time.time()
+                cost_val, acc_val, size_val = exe.run(
+                    train_program,
+                    feed=feeder.feed(data),
+                    fetch_list=[avg_cost, batch_acc_var, batch_size_var])
+                train_pass_acc_evaluator.add(value=acc_val, weight=size_val)
+                total_samples += float(size_val)
+                if batch_id and batch_id % conf.log_period == 0:
+                    print("Pass id: %d, batch id: %d, cost: %f, pass_acc: %f, speed: %f, time: %f" %
+                        (pass_id, batch_id, cost_val,
+                        train_pass_acc_evaluator.eval(),
+                        float(size_val) / (time.time() - batch_start), time.time() - batch_start))
             end_time = time.time()
             total_time += (end_time - start_time)
             pass_test_acc = test(exe)

@@ -21,6 +21,10 @@
 #include <string>
 #include <sys/time.h>
 
+#include <sstream>
+#include <iostream>
+#include <vector>
+
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 #include <thread>
@@ -41,7 +45,7 @@ using helloworld::HelloReply;
 using helloworld::Greeter;
 
 int g_payload_size = 0;
-int loop_times = 1000;
+int g_loop_times = 1000;
 
 void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
@@ -112,7 +116,7 @@ class GreeterClient {
             // Once we're complete, deallocate the call object.
             delete call;
 
-            if (cq_count == loop_times) {
+            if (cq_count == g_loop_times) {
                 //std::cout << "total " << GetTimestamp() - ts << std::endl;
                 /*
                 printf("total:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
@@ -153,20 +157,33 @@ class GreeterClient {
     CompletionQueue cq_;
 };
 
+std::vector<std::string> split(std::string endpoints){
+    std::istringstream f(endpoints);
+    std::string s;
+    std::vector<std::string> strings;
+    while (getline(f, s, ',')) {
+        strings.push_back(s);
+    }
+
+    return strings;
+}
+
 int main(int argc, char** argv) {
     if (argc != 4){
-          printf("cmd format:client ip port size");
+          printf("cmd format:client <ip:port> g_loop_times size");
           exit(1);
       }
 
+      g_loop_times = atoi(argv[2]);
       g_payload_size = atoi(argv[3]);
 
-      std::string ip = std::string(argv[1]);
-      int port = atoi(argv[2]);
-      char end_point[128];
-      snprintf(end_point, sizeof(end_point) -1, "%s:%d", ip.c_str(), port);
-      printf("server end_point:%s\n", end_point);
+      std::vector<std::string> endpoints = split(argv[1]);
+      for(int i=0;i<(int)endpoints.size();i++){
+        printf("server end_point:%s", endpoints[i].c_str());
+      }
 
+      printf(" g_loop_times:%d payload:%d \n", 
+              g_loop_times, g_payload_size);
 
     // Instantiate the client. It requires a channel, out of which the actual RPCs
     // are created. This channel models a connection to an endpoint (in this case,
@@ -176,41 +193,33 @@ int main(int argc, char** argv) {
     args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
     args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
 
-    auto ch = std::shared_ptr<grpc::Channel>( 
-            grpc::CreateCustomChannel(end_point, grpc::InsecureChannelCredentials(), args));
-
     std::vector<std::shared_ptr<grpc::Channel>> chs;
-      //for(int i=0;i<2;i++){
-    //std::string end_point0="0.0.0.0:50001";
-          chs.push_back(grpc::CreateCustomChannel(end_point, grpc::InsecureChannelCredentials(), args));
-     //     std::string end_point1="0.0.0.0:50002";
-      //    chs.push_back(grpc::CreateCustomChannel(end_point1, grpc::InsecureChannelCredentials(), args));
-      //}
+    for(int i=0;i<(int)endpoints.size();i++){
+       chs.push_back(grpc::CreateCustomChannel(endpoints[i], grpc::InsecureChannelCredentials(), args));
+    }
 
     GreeterClient greeter;
 
     // Spawn reader thread that loops indefinitely
     std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
 
-    //const int max = 1 * 1024 * 1024;
-    //for(int m=1024; m < max; m *= 2){
     ElapsedTime time(false);
-    //g_payload_size = 2 * 1024 * 1024;
     HelloRequest request;
     GenRequest("hello", &request);
 
     //std::vector<std::unique_ptr<Greeter::Stub>> stubs;
-    for (int i = 0; i < loop_times; i++) {
-        greeter.SayHello(request, Greeter::NewStub(chs[0]));  // The actual RPC call!
-        //greeter.SayHello(request, Greeter::NewStub(chs[1]));  // The actual RPC call!
+    for (int i = 0; i < g_loop_times; i++) {
+        for(int m=0;m<(int)endpoints.size();m++){
+            greeter.SayHello(request, Greeter::NewStub(chs[m]));  // The actual RPC call!
+        }
     }
     thread_.join();  //blocks forever
 
     double total_time = time.GetElapsed();
     //std::cout << "total " << GetTimestamp() - ts << std::endl;
-    printf("total:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
-            loop_times, (g_payload_size / 1024.0), total_time,
-            g_payload_size * 1.0 * (loop_times) / (1024.0 * total_time));
+    printf("g_loop_times:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
+            g_loop_times, (g_payload_size / 1024.0), total_time,
+            endpoints.size() * g_payload_size * 1.0 * (g_loop_times) / (1024.0 * total_time));
 
     //}
 
