@@ -26,6 +26,7 @@ RUN cd /root && \
 RUN cd /root && \
     git clone https://github.com/Valloric/YouCompleteMe.git .vim/bundle/YouCompleteMe && \
     cd .vim/bundle/YouCompleteMe && \
+    git checkout 7ba7eef & \
     git submodule update --init --recursive && \
     ./install.py --gocode-completer --clang-completer
     
