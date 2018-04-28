@@ -4,7 +4,8 @@ ARG UBUNTU_MIRROR
 RUN /bin/bash -c 'if [[ -n ${UBUNTU_MIRROR} ]]; then sed -i 's#http://archive.ubuntu.com/ubuntu#${UBUNTU_MIRROR}#g' /etc/apt/sources.list; fi'
 
 RUN apt-get update && apt-get -y install ctags build-essential cmake python-dev llvm   python3-dev \
-    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format  iputils-ping python2.7-dbg
+    man manpages  manpages-de manpages-de-dev manpages-dev lrzsz cscope gdb clang-format \
+    iputils-ping python2.7-dbg libgoogle-perftools-dev inetutils-traceroute itop sysstat
 
 RUN cd /root && \
     git clone https://github.com/vim/vim.git && \
@@ -37,7 +38,7 @@ RUN curl -s -q https://glide.sh/get | sh
 RUN go get -u github.com/alecthomas/gometalinter 
 RUN gometalinter --install
 
-RUN pip  install nltk scipy cpplint
+RUN pip  install nltk scipy cpplint yep
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
 
