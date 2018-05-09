@@ -65,7 +65,7 @@ class GreeterClient {
     // Assembles the client's payload and sends it to the server.
     void SayHello(const HelloRequest& request, std::unique_ptr<Greeter::Stub> stub) {
         stub_ = std::move(stub);
-        //paddle::framework::Async([&request, this](){
+        paddle::framework::Async([&request, this](){
             AsyncClientCall* call = new AsyncClientCall;
 
             // stub_->PrepareAsyncSayHello() creates an RPC object, returning
@@ -82,7 +82,7 @@ class GreeterClient {
             // server's response; "status" with the indication of whether the operation
             // was successful. Tag the request with the memory address of the call object.
             call->response_reader->Finish(&call->reply, &call->status, (void*)call);
-        // });
+        });
     }
 
     // Loop while listening for completed responses.
@@ -168,6 +168,19 @@ std::vector<std::string> split(std::string endpoints){
     return strings;
 }
 
+void send(const std::string& ep, const HelloRequest& req,
+        const grpc::ChannelArguments& args){
+    auto ch = grpc::CreateCustomChannel(ep, grpc::InsecureChannelCredentials(), args);
+    GreeterClient c;
+ 
+    for (int i = 0; i < g_loop_times; i++) {
+        c.SayHello(req, Greeter::NewStub(ch));
+    }
+
+    std::thread t = std::thread(&GreeterClient::AsyncCompleteRpc, &c);
+    t.join();  //blocks forever
+}
+
 int main(int argc, char** argv) {
     if (argc != 4){
           printf("cmd format:client <ip:port> loop_times size\n");
@@ -179,7 +192,7 @@ int main(int argc, char** argv) {
 
       std::vector<std::string> endpoints = split(argv[1]);
       for(int i=0;i<(int)endpoints.size();i++){
-        printf("server end_point:%s", endpoints[i].c_str());
+        printf("server end_point:%s\n", endpoints[i].c_str());
       }
 
       printf("g_loop_times:%d payload:%d \n", 
@@ -193,31 +206,21 @@ int main(int argc, char** argv) {
     args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
     args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
 
-    std::vector<std::shared_ptr<grpc::Channel>> chs;
-    for(int i=0;i<(int)endpoints.size();i++){
-       chs.push_back(grpc::CreateCustomChannel(endpoints[i], grpc::InsecureChannelCredentials(), args));
-    }
-
-    GreeterClient greeter;
-
-    // Spawn reader thread that loops indefinitely
-    std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
-
     HelloRequest request;
     GenRequest("hello", &request);
 
     ElapsedTime time(false);
     struct timeval s;
     gettimeofday(&s,0);
-    // printf("begin %ld at ms\n", s.tv_sec * 1000 + s.tv_usec / 1000);
 
-    //std::vector<std::unique_ptr<Greeter::Stub>> stubs;
-    for (int i = 0; i < g_loop_times; i++) {
-        for(int m=0;m<(int)endpoints.size();m++){
-            greeter.SayHello(request, Greeter::NewStub(chs[m]));  // The actual RPC call!
-        }
+    std::vector<std::thread*> threads;
+    for(int m=0;m<(int)endpoints.size();m++){
+        threads.push_back(new std::thread(send, endpoints[m], request, args));
+    } 
+
+    for(int m=0;m<(int)endpoints.size();m++){
+        threads[m]->join();
     }
-    thread_.join();  //blocks forever
 
     struct timeval e;
     gettimeofday(&e,0);
@@ -226,13 +229,9 @@ int main(int argc, char** argv) {
     printf("begin :%ld, end:%ld, used:%ld\n", time_s, time_e, time_e - time_s);
 
     double total_time = time.GetElapsed();
-    //std::cout << "total " << GetTimestamp() - ts << std::endl;
     printf("g_loop_times:%d size:%.2f KB time:%.2f speed:%.2f MB/s\n",
             g_loop_times, (g_payload_size / 1024.0), total_time,
             endpoints.size() * g_payload_size * 1.0 * (g_loop_times) / (1024.0 * total_time));
 
-    //}
-
-    // std::cout << "Press control-c to quit" << std::endl << std::endl;
     return 0;
 }

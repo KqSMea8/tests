@@ -11,5 +11,5 @@ nohup ./client ${ip}:40001 $loop_time $size > 40001_$size.log 2>&1 &
 nohup ./client ${ip}:40002 $loop_time $size > 40002_$size.log 2>&1 &
 nohup ./client ${ip}:40003 $loop_time $size > 40003_$size.log 2>&1 &
 nohup ./client ${ip}:40004 $loop_time $size > 40004_$size.log 2>&1 &
-	sleep 5s
+	sleep 3s
 done
