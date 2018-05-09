@@ -35,6 +35,8 @@
 #include "grpc_util.h"
 #include "elapsed_time.h"
 
+#include "util.h"
+
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
 using grpc::ClientContext;
@@ -157,17 +159,6 @@ class GreeterClient {
     // gRPC runtime.
     CompletionQueue cq_;
 };
-
-std::vector<std::string> split(std::string endpoints){
-    std::istringstream f(endpoints);
-    std::string s;
-    std::vector<std::string> strings;
-    while (getline(f, s, ',')) {
-        strings.push_back(s);
-    }
-
-    return strings;
-}
 
 void send(const std::string& ep, const HelloRequest& req,
         const grpc::ChannelArguments& args){

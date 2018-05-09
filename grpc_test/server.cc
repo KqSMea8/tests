@@ -21,12 +21,14 @@
 #include <string>
 #include <thread>
 
+
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 
 #include "helloworld.grpc.pb.h"
 #include "grpc_service.h"
 #include "threadpool.h"
+#include "util.h"
 
 using grpc::Server;
 using grpc::ServerAsyncResponseWriter;
@@ -212,18 +214,30 @@ class ServerImpl final {
   std::unique_ptr<Server> server_;
 };
 
+void start_server(int port){
+  ServerImpl server;
+  server.Run(port);
+}
+
 int main(int argc, char** argv) {
     if(argc != 3){
-        printf("format:exe port thread_num\n");
+        printf("format:exe <port> thread_num_of_one_server\n");
         exit(0);
     }
 
-  int port=atoi(argv[1]);
   g_thread_num=atoi(argv[2]);
-  printf("port:%d thread_num:%d\n", port, g_thread_num);
+  printf("thread_num:%d\n", g_thread_num);
 
-  ServerImpl server;
-  server.Run(port);
+  std::vector<std::string> ports = split(argv[1]);
+  std::vector<std::thread*> threads;
+  for(int i = 0;i < (int)ports.size();i++){
+      printf("port:%s\n", ports[i].c_str());
+      threads.push_back(new std::thread(start_server, atoi(ports[i].c_str())));
+  }
+
+  for(int i = 0;i < (int)ports.size();i++){
+      threads[i]->join();
+  }
 
   return 0;
 }
