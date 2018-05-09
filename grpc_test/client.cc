@@ -65,7 +65,7 @@ class GreeterClient {
     // Assembles the client's payload and sends it to the server.
     void SayHello(const HelloRequest& request, std::unique_ptr<Greeter::Stub> stub) {
         stub_ = std::move(stub);
-        paddle::framework::Async([&request, this](){
+        //paddle::framework::Async([&request, this](){
             AsyncClientCall* call = new AsyncClientCall;
 
             // stub_->PrepareAsyncSayHello() creates an RPC object, returning
@@ -82,7 +82,7 @@ class GreeterClient {
             // server's response; "status" with the indication of whether the operation
             // was successful. Tag the request with the memory address of the call object.
             call->response_reader->Finish(&call->reply, &call->status, (void*)call);
-        });
+        // });
     }
 
     // Loop while listening for completed responses.
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
         printf("server end_point:%s", endpoints[i].c_str());
       }
 
-      printf(" g_loop_times:%d payload:%d \n", 
+      printf("g_loop_times:%d payload:%d \n", 
               g_loop_times, g_payload_size);
 
     // Instantiate the client. It requires a channel, out of which the actual RPCs
@@ -203,9 +203,13 @@ int main(int argc, char** argv) {
     // Spawn reader thread that loops indefinitely
     std::thread thread_ = std::thread(&GreeterClient::AsyncCompleteRpc, &greeter);
 
-    ElapsedTime time(false);
     HelloRequest request;
     GenRequest("hello", &request);
+
+    ElapsedTime time(false);
+    struct timeval s;
+    gettimeofday(&s,0);
+    // printf("begin %ld at ms\n", s.tv_sec * 1000 + s.tv_usec / 1000);
 
     //std::vector<std::unique_ptr<Greeter::Stub>> stubs;
     for (int i = 0; i < g_loop_times; i++) {
@@ -214,6 +218,12 @@ int main(int argc, char** argv) {
         }
     }
     thread_.join();  //blocks forever
+
+    struct timeval e;
+    gettimeofday(&e,0);
+    int64_t time_s = s.tv_sec * 1000 + s.tv_usec / 1000;
+    int64_t time_e = e.tv_sec * 1000 + e.tv_usec / 1000;
+    printf("begin :%ld, end:%ld, used:%ld\n", time_s, time_e, time_e - time_s);
 
     double total_time = time.GetElapsed();
     //std::cout << "total " << GetTimestamp() - ts << std::endl;
