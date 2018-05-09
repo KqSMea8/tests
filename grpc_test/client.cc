@@ -48,7 +48,7 @@ using helloworld::Greeter;
 
 int g_payload_size = 0;
 int g_loop_times = 1000;
-int g_thread_num = 1;
+int g_thread_num = 1; // send threads
 
 void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
