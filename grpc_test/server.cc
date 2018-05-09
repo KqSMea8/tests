@@ -42,7 +42,7 @@ using helloworld::Greeter;
 
 using namespace paddle::operators;
 
-int g_thread_num=0; // proc thread per port
+int g_thread_num=1; // proc thread per port
 
 std::unique_ptr<::grpc::ByteBuffer> SerializeToByteBuffer(
     ::grpc::protobuf::Message* message) {
