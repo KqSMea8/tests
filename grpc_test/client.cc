@@ -46,6 +46,7 @@ using helloworld::Greeter;
 
 int g_payload_size = 0;
 int g_loop_times = 1000;
+int g_thread_num = 1;
 
 void GenRequest(std::string user, HelloRequest* request){
     char* payload_alloc = (char*)malloc(g_payload_size);
@@ -182,21 +183,22 @@ void send(const std::string& ep, const HelloRequest& req,
 }
 
 int main(int argc, char** argv) {
-    if (argc != 4){
-          printf("cmd format:client <ip:port> loop_times size\n");
+    if (argc != 5){
+          printf("cmd format:client <ip:port> loop_times size thread_num\n");
           exit(1);
       }
 
       g_loop_times = atoi(argv[2]);
       g_payload_size = atoi(argv[3]);
+      g_thread_num = atoi(argv[4]);
 
       std::vector<std::string> endpoints = split(argv[1]);
       for(int i=0;i<(int)endpoints.size();i++){
         printf("server end_point:%s\n", endpoints[i].c_str());
       }
 
-      printf("g_loop_times:%d payload:%d \n", 
-              g_loop_times, g_payload_size);
+      printf("g_loop_times:%d payload:%d  thread_num:%d\n", 
+              g_loop_times, g_payload_size, g_thread_num);
 
     // Instantiate the client. It requires a channel, out of which the actual RPCs
     // are created. This channel models a connection to an endpoint (in this case,

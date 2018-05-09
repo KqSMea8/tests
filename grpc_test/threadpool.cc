@@ -14,6 +14,7 @@
 
 #include "threadpool.h"
 
+extern int g_thread_num;
 
 namespace paddle {
 namespace framework {
@@ -28,12 +29,7 @@ ThreadPool* ThreadPool::GetInstance() {
 
 void ThreadPool::Init() {
   if (threadpool_.get() == nullptr) {
-    // TODO(Yancey1989): specify the max threads number
-    // int num_threads = std::thread::hardware_concurrency();
-    // PADDLE_ENFORCE_GT(num_threads, 0);
-    int num_threads = 4;
-    threadpool_.reset(new ThreadPool(num_threads));
-    //threadpool_.reset(new ThreadPool(1));
+    threadpool_.reset(new ThreadPool(g_thread_num));
   }
 }
 

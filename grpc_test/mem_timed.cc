@@ -5,6 +5,8 @@
 #include "threadpool.h"
 #include "elapsed_time.h"
 
+int g_thread_num=5;
+
 void memcpy_speed(unsigned long buf_size, int iters){
     //struct timeval start,  end;
     char * pbuff_1;
