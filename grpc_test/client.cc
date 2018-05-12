@@ -160,10 +160,12 @@ class GreeterClient {
     CompletionQueue cq_;
 };
 
-void send(const std::string& ep, const HelloRequest& req){
+void send(const std::string& ep, const HelloRequest& req, int max){
     grpc::ChannelArguments args;
     args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
     args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
+    args.SetInt(GRPC_ARG_HTTP2_STREAM_LOOKAHEAD_BYTES, 1024*1024*1024);
+    args.SetInt(GRPC_ARG_MAX_CONCURRENT_STREAMS, max);
 
     auto ch = grpc::CreateCustomChannel(ep, grpc::InsecureChannelCredentials(), args);
     GreeterClient c;
@@ -179,7 +181,7 @@ void send(const std::string& ep, const HelloRequest& req){
 void run(const std::string& ep, const HelloRequest& req){
     std::vector<std::thread*> threads;
     for(int i=0;i<g_thread_num;i++){
-        threads.push_back(new std::thread(send, ep, req));
+        threads.push_back(new std::thread(send, ep, req, 256+i));
     }
 
     for(int i=0;i<g_thread_num;i++){
