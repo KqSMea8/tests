@@ -68,7 +68,7 @@ class GreeterClient {
     // Assembles the client's payload and sends it to the server.
     void SayHello(const HelloRequest& request, std::unique_ptr<Greeter::Stub> stub) {
         stub_ = std::move(stub);
-        paddle::framework::Async([&request, this](){
+        // paddle::framework::Async([&request, this](){
             AsyncClientCall* call = new AsyncClientCall;
 
             // stub_->PrepareAsyncSayHello() creates an RPC object, returning
@@ -85,7 +85,7 @@ class GreeterClient {
             // server's response; "status" with the indication of whether the operation
             // was successful. Tag the request with the memory address of the call object.
             call->response_reader->Finish(&call->reply, &call->status, (void*)call);
-        });
+        // });
     }
 
     // Loop while listening for completed responses.
@@ -160,8 +160,11 @@ class GreeterClient {
     CompletionQueue cq_;
 };
 
-void send(const std::string& ep, const HelloRequest& req,
-        const grpc::ChannelArguments& args){
+void send(const std::string& ep, const HelloRequest& req){
+    grpc::ChannelArguments args;
+    args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
+    args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
+
     auto ch = grpc::CreateCustomChannel(ep, grpc::InsecureChannelCredentials(), args);
     GreeterClient c;
  
@@ -171,6 +174,17 @@ void send(const std::string& ep, const HelloRequest& req,
 
     std::thread t = std::thread(&GreeterClient::AsyncCompleteRpc, &c);
     t.join();  //blocks forever
+}
+
+void run(const std::string& ep, const HelloRequest& req){
+    std::vector<std::thread*> threads;
+    for(int i=0;i<g_thread_num;i++){
+        threads.push_back(new std::thread(send, ep, req));
+    }
+
+    for(int i=0;i<g_thread_num;i++){
+        threads[i]->join();
+    }
 }
 
 int main(int argc, char** argv) {
@@ -195,9 +209,6 @@ int main(int argc, char** argv) {
     // are created. This channel models a connection to an endpoint (in this case,
     // localhost at port 50051). We indicate that the channel isn't authenticated
     // (use of InsecureChannelCredentials()).
-    grpc::ChannelArguments args;
-    args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
-    args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
 
     HelloRequest request;
     GenRequest("hello", &request);
@@ -208,7 +219,7 @@ int main(int argc, char** argv) {
 
     std::vector<std::thread*> threads;
     for(int m=0;m<(int)endpoints.size();m++){
-        threads.push_back(new std::thread(send, endpoints[m], request, args));
+        threads.push_back(new std::thread(run, endpoints[m], request));
     } 
 
     for(int m=0;m<(int)endpoints.size();m++){
