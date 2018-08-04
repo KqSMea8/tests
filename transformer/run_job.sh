@@ -15,7 +15,6 @@ paddlecloud job \
     --cluster-name paddle-jpaas-ai00-gpu \
     --k8s-gpu-cards 8 \
     --k8s-priority high \
-    --k8s-wall-time 10:00:00 \
     --k8s-memory 60Gi \
     --k8s-ps-memory 30Gi \
     --job-name gongweibao-transformer \

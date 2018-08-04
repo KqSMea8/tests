@@ -35,6 +35,7 @@ FLAGS_rpc_deadline=3000000
 ##test data path on hdfs, can be null or not setted
 #test_data_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
 #add datareader to thirdparty
-thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
+#thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
+thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr"
 #the output directory on hdfs
 output_path="/app/inf/mpi/bml-guest/paddlepaddle/gongweibao/transformer/en-fr/output"
