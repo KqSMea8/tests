@@ -188,6 +188,9 @@ class ServerImpl final {
 
   // This can be run in multiple threads if needed.
   void HandleRpcs(::grpc::ServerCompletionQueue* cq) {
+      for(int i=0;i<1000;i++){
+        RegistNew(cq);
+      }
         RegistNew(cq);
         void* tag;  // uniquely identifies a request.
         bool ok;

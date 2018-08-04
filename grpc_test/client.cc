@@ -198,6 +198,7 @@ int main(int argc, char** argv) {
     grpc::ChannelArguments args;
     args.SetMaxSendMessageSize(std::numeric_limits<int>::max());
     args.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
+    args.SetInt(GRPC_ARG_MAX_CONCURRENT_STREAMS, 100);
 
     HelloRequest request;
     GenRequest("hello", &request);

@@ -26,6 +26,7 @@ A* Create(){
     return &a;
 }
 
+
 A* Create2(){
     static A* a = new A(new B());
     return a;
@@ -33,9 +34,9 @@ A* Create2(){
 
 
 int main(){
-    A* a0 = Create();
-    A* a1 = Create2();
+    A* axxx0 = Create();
+    A* axxx1 = Create2();
 
-    std::cout << "a0:" << a0 
-        << ", a1:" << a1;
+    std::cout << "axxx0:" << axxx0
+        << ", axxx1:" << axxx1;
 }
