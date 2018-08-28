@@ -18,14 +18,9 @@ paddlecloud job \
     --k8s-priority high \
     --k8s-wall-time ${k8s_wall_time} \
     --k8s-memory 200Gi \
-    --k8s-ps-memory 40Gi \
-    --job-name gongweibao-transformer \
+    --job-name gongweibao-transformer-cloud-local-b2048 \
     --start-cmd "python -u run.py" \
     --job-conf transformer/conf.py \
-    --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer/run.py \
-    --k8s-not-local  \
-    --k8s-trainers 2 \
+    --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer_batch2048/run.py \
     --k8s-cpu-cores 7 \
-    --k8s-ps-num 2 \
-    --k8s-ps-cores 7 \
     --image-addr "registry.baidu.com/gongweibao/distribute_test_transformer:latest"

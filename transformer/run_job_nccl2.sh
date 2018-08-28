@@ -2,7 +2,7 @@
 
 set -x
 
-source /home/gongwb/application/bin/paddlecloud_1.0.3/demo/command-test/config.sh 
+source /home/gongwb/application/bin/paddlecloud-cli/demo/command-test/config.sh 
 
 k8s_wall_time="96:00:00"
 
@@ -18,14 +18,12 @@ paddlecloud job \
     --k8s-priority high \
     --k8s-wall-time ${k8s_wall_time} \
     --k8s-memory 200Gi \
-    --k8s-ps-memory 40Gi \
-    --job-name gongweibao-transformer \
+    --distribute-job-type NCCL2 \
+    --job-name gongweibao-transformer-nccl2 \
     --start-cmd "python -u run.py" \
     --job-conf transformer/conf.py \
     --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer/run.py \
     --k8s-not-local  \
     --k8s-trainers 2 \
     --k8s-cpu-cores 7 \
-    --k8s-ps-num 2 \
-    --k8s-ps-cores 7 \
     --image-addr "registry.baidu.com/gongweibao/distribute_test_transformer:latest"

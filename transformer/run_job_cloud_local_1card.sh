@@ -14,18 +14,13 @@ paddlecloud job \
     train --job-version paddle-fluid-custom \
     --k8s-gpu-type baidu/gpu_p40 \
     --cluster-name paddle-jpaas-ai00-gpu \
-    --k8s-gpu-cards 8 \
+    --k8s-gpu-cards 1 \
     --k8s-priority high \
     --k8s-wall-time ${k8s_wall_time} \
     --k8s-memory 200Gi \
-    --k8s-ps-memory 40Gi \
-    --job-name gongweibao-transformer \
+    --job-name gongweibao-transformer-cloud-local-1card \
     --start-cmd "python -u run.py" \
     --job-conf transformer/conf.py \
     --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer/run.py \
-    --k8s-not-local  \
-    --k8s-trainers 2 \
     --k8s-cpu-cores 7 \
-    --k8s-ps-num 2 \
-    --k8s-ps-cores 7 \
     --image-addr "registry.baidu.com/gongweibao/distribute_test_transformer:latest"
