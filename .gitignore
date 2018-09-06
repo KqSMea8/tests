@@ -1,1 +1,7 @@
 *.un\~
+*.o
+*.log
+*.tar
+.*.swp
+.*.swo
+*.whl

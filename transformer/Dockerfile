@@ -1,4 +1,5 @@
-FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-gcc482-cuda8.0_cudnn5
+#FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-gcc482-cuda8.0_cudnn5
+FROM  registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-v0.14.0-gcc482-cuda8.0_cudnn5
 MAINTAINER PaddlePaddle Authors <paddle-dev@baidu.com>
 USER root
 ENV HOME /root

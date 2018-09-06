@@ -24,10 +24,13 @@ RUN cd /root && \
     wget --quiet https://raw.githubusercontent.com/gongweibao/tests/develop/paddle/.vimrc && \
     git clone https://github.com/VundleVim/Vundle.vim.git .vim/bundle/Vundle.vim
 
+ENV http_proxy=http://172.19.56.198:8123
+ENV https_proxy=http://172.19.56.198:8123
+
 RUN cd /root && \
     git clone https://github.com/Valloric/YouCompleteMe.git .vim/bundle/YouCompleteMe && \
     cd .vim/bundle/YouCompleteMe && \
-    git checkout 7ba7eef & \
+    git checkout 7ba7eef && \
     git submodule update --init --recursive && \
     ./install.py --gocode-completer --clang-completer
     
