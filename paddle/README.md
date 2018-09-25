@@ -103,3 +103,9 @@ add-apt-repository ppa:masterminds/glide
 apt-get update
 apt-get install glide
 ```
+
+
+## paddlepaddle 国内镜像
+```
+hub.baidubce.com/paddlepaddle/paddle
+```
