@@ -17,9 +17,9 @@ paddlecloud job \
     --k8s-gpu-cards 8 \
     --k8s-priority high \
     --k8s-wall-time ${k8s_wall_time} \
-    --k8s-memory 200Gi \
+    --k8s-memory 100Gi \
     --distribute-job-type NCCL2 \
-    --job-name gongweibao-transformer-nccl2 \
+    --job-name gongweibao-transformer-nccl2-en-fr \
     --start-cmd "python -u run.py" \
     --job-conf transformer/conf.py \
     --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer/run.py \

@@ -1,6 +1,5 @@
-import logging
 class TrainTaskConfig(object):
-    # only support GPU currently
+    # support both CPU and GPU now.
     use_gpu = True
     # the epoch number to train.
     pass_num = 30
@@ -10,20 +9,20 @@ class TrainTaskConfig(object):
     # the hyper parameters for Adam optimizer.
     # This static learning_rate will be multiplied to the LearningRateScheduler
     # derived learning rate the to get the final learning rate.
-    learning_rate = 1
+    learning_rate = 2.0
     beta1 = 0.9
-    beta2 = 0.98
+    beta2 = 0.997
     eps = 1e-9
     # the parameters for learning rate scheduling.
-    warmup_steps = 4000
+    warmup_steps = 8000
     # the weight used to mix up the ground-truth distribution and the fixed
     # uniform distribution in label smoothing when training.
     # Set this as zero if label smoothing is not wanted.
     label_smooth_eps = 0.1
     # the directory for saving trained models.
-    model_dir = "output/trained_models"
+    model_dir = "trained_models"
     # the directory for saving checkpoints.
-    ckpt_dir = "output/trained_ckpts"
+    ckpt_dir = "trained_ckpts"
     # the directory for loading checkpoint.
     # If provided, continue training from the checkpoint.
     ckpt_path = None
@@ -31,6 +30,8 @@ class TrainTaskConfig(object):
     # It should be provided if use checkpoints, since the checkpoint doesn't
     # include the training step counter currently.
     start_step = 0
+    # the frequency to save trained models.
+    save_freq = 10000
 
 
 class InferTaskConfig(object):
@@ -64,7 +65,6 @@ class ModelHyperParams(object):
     # index for <unk> token
     unk_idx = 2
     # max length of sequences deciding the size of position encoding table.
-    # Start from 1 and count start and end tokens in.
     max_length = 256
     # the dimension for word embeddings, which is also the last dimension of
     # the input and output of multi-head attention, position-wise feed-forward
@@ -80,8 +80,14 @@ class ModelHyperParams(object):
     n_head = 8
     # number of sub-layers to be stacked in the encoder and decoder.
     n_layer = 6
-    # dropout rate used by all dropout layers.
-    dropout = 0.1
+    # dropout rates of different modules.
+    prepostprocess_dropout = 0.1
+    attention_dropout = 0.1
+    relu_dropout = 0.1
+    # to process before each sub-layer
+    preprocess_cmd = "n"  # layer normalization
+    # to process after each sub-layer
+    postprocess_cmd = "da"  # dropout + residual connection
     # random seed used in dropout for CE.
     dropout_seed = None
     # the flag indicating whether to share embedding and softmax weights.
@@ -93,7 +99,6 @@ def merge_cfg_from_list(cfg_list, g_cfgs):
     """
     Set the above global configurations using the cfg_list. 
     """
-    logging.debug("cfg_list:{}".format(cfg_list))
     assert len(cfg_list) % 2 == 0
     for key, value in zip(cfg_list[0::2], cfg_list[1::2]):
         for g_cfg in g_cfgs:
@@ -117,30 +122,24 @@ seq_len = ModelHyperParams.max_length
 # compile time.
 input_descs = {
     # The actual data shape of src_word is:
-    # [batch_size * max_src_len_in_batch, 1]
-    "src_word": [(batch_size * seq_len, 1L), "int64", 2],
+    # [batch_size, max_src_len_in_batch, 1]
+    "src_word": [(batch_size, seq_len, 1), "int64", 2],
     # The actual data shape of src_pos is:
-    # [batch_size * max_src_len_in_batch, 1]
-    "src_pos": [(batch_size * seq_len, 1L), "int64"],
+    # [batch_size, max_src_len_in_batch, 1]
+    "src_pos": [(batch_size, seq_len, 1), "int64"],
     # This input is used to remove attention weights on paddings in the
     # encoder.
     # The actual data shape of src_slf_attn_bias is:
     # [batch_size, n_head, max_src_len_in_batch, max_src_len_in_batch]
     "src_slf_attn_bias": [(batch_size, ModelHyperParams.n_head, seq_len,
                            seq_len), "float32"],
-    # This shape input is used to reshape the output of embedding layer.
-    "src_data_shape": [(3L, ), "int32"],
-    # This shape input is used to reshape before softmax in self attention.
-    "src_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in self attention.
-    "src_slf_attn_post_softmax_shape": [(4L, ), "int32"],
     # The actual data shape of trg_word is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "trg_word": [(batch_size * seq_len, 1L), "int64",
+    # [batch_size, max_trg_len_in_batch, 1]
+    "trg_word": [(batch_size, seq_len, 1), "int64",
                  2],  # lod_level is only used in fast decoder.
     # The actual data shape of trg_pos is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "trg_pos": [(batch_size * seq_len, 1L), "int64"],
+    # [batch_size, max_trg_len_in_batch, 1]
+    "trg_pos": [(batch_size, seq_len, 1), "int64"],
     # This input is used to remove attention weights on paddings and
     # subsequent words in the decoder.
     # The actual data shape of trg_slf_attn_bias is:
@@ -153,33 +152,19 @@ input_descs = {
     # [batch_size, n_head, max_trg_len_in_batch, max_src_len_in_batch]
     "trg_src_attn_bias": [(batch_size, ModelHyperParams.n_head, seq_len,
                            seq_len), "float32"],
-    # This shape input is used to reshape the output of embedding layer.
-    "trg_data_shape": [(3L, ), "int32"],
-    # This shape input is used to reshape before softmax in self attention.
-    "trg_slf_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in self attention.
-    "trg_slf_attn_post_softmax_shape": [(4L, ), "int32"],
-    # This shape input is used to reshape before softmax in encoder-decoder
-    # attention.
-    "trg_src_attn_pre_softmax_shape": [(2L, ), "int32"],
-    # This shape input is used to reshape after softmax in encoder-decoder
-    # attention.
-    "trg_src_attn_post_softmax_shape": [(4L, ), "int32"],
     # This input is used in independent decoder program for inference.
     # The actual data shape of enc_output is:
     # [batch_size, max_src_len_in_batch, d_model]
     "enc_output": [(batch_size, seq_len, ModelHyperParams.d_model), "float32"],
     # The actual data shape of label_word is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_word": [(batch_size * seq_len, 1L), "int64"],
+    "lbl_word": [(batch_size * seq_len, 1), "int64"],
     # This input is used to mask out the loss of paddding tokens.
     # The actual data shape of label_weight is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_weight": [(batch_size * seq_len, 1L), "float32"],
-    # These inputs are used to change the shape tensor in beam-search decoder.
-    "trg_slf_attn_pre_softmax_shape_delta": [(2L, ), "int32"],
-    "trg_slf_attn_post_softmax_shape_delta": [(4L, ), "int32"],
-    "init_score": [(batch_size, 1L), "float32"],
+    "lbl_weight": [(batch_size * seq_len, 1), "float32"],
+    # This input is used in beam-search decoder.
+    "init_score": [(batch_size, 1), "float32"],
 }
 
 # Names of word embedding table which might be reused for weight sharing.
@@ -195,22 +180,12 @@ encoder_data_input_fields = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias", )
-encoder_util_input_fields = (
-    "src_data_shape",
-    "src_slf_attn_pre_softmax_shape",
-    "src_slf_attn_post_softmax_shape", )
 decoder_data_input_fields = (
     "trg_word",
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
     "enc_output", )
-decoder_util_input_fields = (
-    "trg_data_shape",
-    "trg_slf_attn_pre_softmax_shape",
-    "trg_slf_attn_post_softmax_shape",
-    "trg_src_attn_pre_softmax_shape",
-    "trg_src_attn_post_softmax_shape", )
 label_data_input_fields = (
     "lbl_word",
     "lbl_weight", )
@@ -220,6 +195,3 @@ fast_decoder_data_input_fields = (
     "trg_word",
     "init_score",
     "trg_src_attn_bias", )
-fast_decoder_util_input_fields = decoder_util_input_fields + (
-    "trg_slf_attn_pre_softmax_shape_delta",
-    "trg_slf_attn_post_softmax_shape_delta", )

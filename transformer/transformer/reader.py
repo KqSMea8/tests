@@ -1,8 +1,8 @@
 import glob
 import os
-import random
 import tarfile
-import cPickle
+
+import numpy as np
 
 
 class SortType(object):
@@ -12,15 +12,16 @@ class SortType(object):
 
 
 class Converter(object):
-    def __init__(self, vocab, beg, end, unk, delimiter):
+    def __init__(self, vocab, beg, end, unk, delimiter, add_beg):
         self._vocab = vocab
         self._beg = beg
         self._end = end
         self._unk = unk
         self._delimiter = delimiter
+        self._add_beg = add_beg
 
     def __call__(self, sentence):
-        return [self._beg] + [
+        return ([self._beg] if self._add_beg else []) + [
             self._vocab.get(w, self._unk)
             for w in sentence.split(self._delimiter)
         ] + [self._end]
@@ -204,7 +205,8 @@ class DataReader(object):
         self._token_delimiter = token_delimiter
         self.load_src_trg_ids(end_mark, fpattern, start_mark, tar_fname,
                               unk_mark)
-        self._random = random.Random(x=seed)
+        self._random = np.random
+        self._random.seed(seed)
 
     def load_src_trg_ids(self, end_mark, fpattern, start_mark, tar_fname,
                          unk_mark):
@@ -214,7 +216,8 @@ class DataReader(object):
                 beg=self._src_vocab[start_mark],
                 end=self._src_vocab[end_mark],
                 unk=self._src_vocab[unk_mark],
-                delimiter=self._token_delimiter)
+                delimiter=self._token_delimiter,
+                add_beg=False)
         ]
         if not self._only_src:
             converters.append(
@@ -223,7 +226,8 @@ class DataReader(object):
                     beg=self._trg_vocab[start_mark],
                     end=self._trg_vocab[end_mark],
                     unk=self._trg_vocab[unk_mark],
-                    delimiter=self._token_delimiter))
+                    delimiter=self._token_delimiter,
+                    add_beg=True))
 
         converters = ComposedConverter(converters)
 
@@ -279,8 +283,7 @@ class DataReader(object):
     def batch_generator(self):
         # global sort or global shuffle
         if self._sort_type == SortType.GLOBAL:
-            infos = sorted(
-                self._sample_infos, key=lambda x: x.max_len, reverse=True)
+            infos = sorted(self._sample_infos, key=lambda x: x.max_len)
         else:
             if self._shuffle:
                 infos = self._sample_infos

@@ -2,7 +2,8 @@
 
 set -x
 
-source /home/gongwb/application/bin/paddlecloud_1.0.3/demo/command-test/config.sh 
+#source /home/gongwb/application/bin/paddlecloud_1.0.3/demo/command-test/config.sh 
+source /home/gongwb/application/bin/paddlecloud-cli/demo/command-test/config.sh 
 
 k8s_wall_time="96:00:00"
 

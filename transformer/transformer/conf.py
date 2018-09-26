@@ -21,7 +21,7 @@ fs_ugi="bml,bml#user"
 #which pass
 #pserver_model_pass=
 FLAGS_rpc_deadline=3000000
-#GLOG_v=4
+#GLOG_v=1
 #GLOG_logtostderr=1
 
 ##train data path on hdfs
@@ -35,4 +35,4 @@ thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-
 #thirdparty_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
 
 #the output directory on hdfs
-output_path="/app/inf/mpi/bml-guest/paddlepaddle/gongweibao/transformer/en-de/output"
+output_path="/app/inf/mpi/bml-guest/paddlepaddle/gongweibao/transformer/en-fr/output"
