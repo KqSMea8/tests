@@ -45,8 +45,8 @@ RUN go get github.com/google/pprof
 RUN pip  install nltk scipy cpplint yep
 
 #RUN mkdir -p /root/go/src/github.com/PaddlePaddle 
-
-RUN vim +PluginInstall +qall
+#
+#RUN vim +PluginInstall +qall
 #RUN vim +GoInstallBinaries +qall
 
 RUN echo "alias vi=vim" >> /root/.bashrc

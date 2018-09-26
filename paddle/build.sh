@@ -4,7 +4,7 @@ if [[ $# != 3 ]]; then
     exit 1
 fi
 
-build_type=Relase
+build_type=Release
 if [[ $2 == "debug" ]];  then
     build_type=RelWithDebInfo
 fi
@@ -49,4 +49,5 @@ cmake ../../  -DTHIRD_PARTY_PATH=/paddle/build/third_party/${build_type}_${place
          -DWITH_GRPC=${WITH_GRPC} \
          -DWITH_BRPC_RDMA=${WITH_BRPC_RDMA} \
          -DWITH_FLUID_ONLY=ON \
+         -DWITH_INFERENCE=ON \
          -DCMAKE_INSTALL_PREFIX=/root/paddlebuild/${build_type}_${place}/install
