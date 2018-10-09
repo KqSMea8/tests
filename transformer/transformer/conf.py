@@ -25,13 +25,15 @@ FLAGS_rpc_deadline=3000000
 #GLOG_logtostderr=1
 
 ##train data path on hdfs
-train_data_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-train"
+#train_data_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-train"
+train_data_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-train-test-data/train" 
 
 ##test data path on hdfs, can be null or not setted
 #test_data_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
 
 #add datareader to thirdparty
-thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-thirdparty"
+#thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-thirdparty"
+thirdparty_path = "/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/en-fr-train-test-data/thirdparty"
 #thirdparty_path="/app/inf/mpi/bml-guest/paddlepaddle/public/transformer/wmt14_enfr_test"
 
 #the output directory on hdfs

@@ -1,9 +1,11 @@
-FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-gcc482-cuda8.0_cudnn5
+#FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-gcc482-cuda8.0_cudnn5
 #FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-ubuntu-offline:paddlecloud-cuda8.0_cudnn6_driver384.66
+FROM registry.baidu.com/paddlecloud/paddlecloud-runenv-centos6u3-online:paddlecloud-gcc482-cuda8.0_cudnn7
 MAINTAINER PaddlePaddle Authors <paddle-dev@baidu.com>
+ARG rpc_name
 USER root
 ENV HOME /root
-ADD ./*.whl /tmp/
+ADD ./${rpc_name}/*.whl /tmp/
 ADD pip.conf /etc/pip.conf
 ADD pip.conf ~/.pip/pip.conf
 RUN pip uninstall -y requests; exit 0

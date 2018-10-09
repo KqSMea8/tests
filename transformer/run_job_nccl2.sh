@@ -2,7 +2,8 @@
 
 set -x
 
-source /home/gongwb/application/bin/paddlecloud-cli/demo/command-test/config.sh 
+#source /home/gongwb/application/bin/paddlecloud-cli/demo/command-test/config.sh 
+source /home/gongwb/local/etc/paddlecloud-cli/config.sh
 
 k8s_wall_time="96:00:00"
 
@@ -26,4 +27,4 @@ paddlecloud job \
     --k8s-not-local  \
     --k8s-trainers 2 \
     --k8s-cpu-cores 7 \
-    --image-addr "registry.baidu.com/gongweibao/distribute_test_transformer:latest"
+    --image-addr "registry.baidu.com/gongweibao/distribute_test_transformer:1.0.0"
