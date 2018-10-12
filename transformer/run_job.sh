@@ -23,10 +23,10 @@ paddlecloud job \
     train --job-version paddle-fluid-custom \
     --k8s-gpu-type baidu/gpu_p40 \
     --cluster-name paddle-jpaas-ai00-gpu \
-    --k8s-gpu-cards 8 \
+    --k8s-gpu-cards 4 \
     --k8s-priority high \
     --k8s-wall-time ${k8s_wall_time} \
-    --k8s-memory 200Gi \
+    --k8s-memory 120Gi \
     --k8s-ps-memory 40Gi \
     --job-name gongweibao-${rpc_name}-transformer \
     --start-cmd "python -u run.py" \
