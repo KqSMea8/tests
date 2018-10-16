@@ -7,10 +7,13 @@ import time
 
 import numpy as np
 import paddle.fluid as fluid
+import paddle.fluid.profiler as profiler
 
 import reader
 from config import *
 from model import transformer, position_encoding_init
+
+from paddle.fluid.transpiler.details import program_to_code
 
 import logging
 import sys
@@ -129,6 +132,9 @@ def parse_args():
         type=int,
         default=100,
         help="Fetch outputs steps.")
+
+    #parser.add_argument(
+    #    '--profile', action='store_true', help='If set, profile a few steps.')
 
 
     args = parser.parse_args()
@@ -467,8 +473,8 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     #build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
 
     exec_strategy = fluid.ExecutionStrategy()
-    if args.update_method == "nccl2":
-        exec_strategy.num_threads = 1
+    #if args.update_method == "nccl2":
+    exec_strategy.num_threads = 1
 
     logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
@@ -509,11 +515,22 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
 
+                if TrainTaskConfig.profile and batch_id == 5:
+                    logging.info("begin profiler")
+                    profiler.start_profiler("All")
+                    profiler.reset_profiler()
+                elif TrainTaskConfig.profile and batch_id == 10:
+                    logging.info("end profiler")
+                    #logging.info("profiling total time: ", time.time() - start_time)
+                    profiler.stop_profiler("total", "./transformer_local_profile_{}_pass{}".format(batch_id, pass_id))
+                    sys.exit(0)
+
+                logging.info("batch_id:{}".format(batch_id))
                 outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name] if batch_id % args.fetch_steps == 0 else[], 
+                    fetch_list=[sum_cost.name, token_num.name] if (batch_id % args.fetch_steps == 0 or TrainTaskConfig.profile) else[], 
                         feed=feed_dict_list)
                 
-                if batch_id % args.fetch_steps == 0 and batch_id > 0:
+                if (batch_id % args.fetch_steps == 0 and batch_id > 0):
                     sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
                         1])
                     # sum the cost from multi-devices
@@ -627,8 +644,13 @@ def train(args):
             if args.sync:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
+                print("before adam")
+
+                with fluid.default_main_program()._lr_schedule_guard():
+                    learning_rate = lr_decay * TrainTaskConfig.learning_rate
+
                 optimizer = fluid.optimizer.Adam(
-                    learning_rate=lr_decay * TrainTaskConfig.learning_rate,
+                    learning_rate=learning_rate,
                     beta1=TrainTaskConfig.beta1,
                     beta2=TrainTaskConfig.beta2,
                     epsilon=TrainTaskConfig.eps)
@@ -673,6 +695,13 @@ def train(args):
         trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
         current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
+
+        print("pserver_endpoints", pserver_endpoints)
+        print("current_endpoint", current_endpoint)
+        print("trainer_id", trainer_id)
+        print("pserver_ips", pserver_ips)
+        print("port", port)
+
         t = fluid.DistributeTranspiler()
         t.transpile(
             trainer_id,
@@ -692,11 +721,26 @@ def train(args):
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
 
+            print("pserver start:")
+            program_to_code(pserver_startup)
+            print("pserver train:")
+            program_to_code(pserver_prog)
+            #sys.exit(0)
+
             exe.run(pserver_startup)
             exe.run(pserver_prog)
         elif training_role == "TRAINER":
             logging.info("distributed: trainer started")
             trainer_prog = t.get_trainer_program()
+
+            '''
+            print("trainer start:")
+            program_to_code(pserver_startup)
+            print("trainer train:")
+            program_to_code(trainer_prog)
+            sys.exit(0)
+            '''
+
             train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
                        avg_cost, token_num, predict, pyreader)
         else:

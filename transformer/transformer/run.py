@@ -36,4 +36,4 @@ if __name__ == '__main__':
         cmd = "FLAGS_rpc_server_profile_period={} FLAGS_rpc_server_profile_path={} {}".format(args.pserver_profile_end_step, args.pserver_profile_path, cmd)
 
     print("cmd:", cmd)
-    #exit(os.system(cmd))
+    exit(os.system(cmd))
