@@ -236,7 +236,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         if i % args.print_freq == 0 and i >= args.print_freq:
             print("data_speed:%.2f" % (data_time.count * batch_size / data_time.sum))
         end = time.time()
-        continue
+        #continue
 
         if args.gpu is not None:
             input = input.cuda(args.gpu, non_blocking=True)
