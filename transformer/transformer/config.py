@@ -32,7 +32,7 @@ class TrainTaskConfig(object):
     start_step = 0
     # the frequency to save trained models.
     save_freq = 10000
-    profile=True
+    profile=False
 
 
 class InferTaskConfig(object):
