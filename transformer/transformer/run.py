@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print("not supported data_set:", args.data_set)
 
     if args.update_method == "nccl2":
-        cmd = cmd + " --update_method nccl2"
+        cmd = "NCCL_IB_DISABLE=1 " + cmd + " --update_method nccl2"
 
     if args.profile:
         assert args.pserver_profile_end_step >= 0

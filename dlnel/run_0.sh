@@ -18,7 +18,7 @@ export GLOG_v=3
 
 cd /workspace/
 
-python -u src/train.py \
+python -u train.py \
     --src_vocab_fpath 'cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
     --trg_vocab_fpath 'cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
     --special_token '<s>' '<e>' '<unk>'  \
@@ -29,7 +29,7 @@ python -u src/train.py \
     --batch_size  3200 \
     --sort_type pool \
     --pool_size 200000 \
-    --local False
+    --local False \
   --shuffle True \
   --shuffle_batch True \
   --use_py_reader True \

@@ -10,7 +10,6 @@ import time
 
 import numpy as np
 import paddle.fluid as fluid
-from paddle.fluid.transpiler.details import program_to_code
 
 import reader
 from config import *
@@ -469,7 +468,7 @@ def train_loop(exe,
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
-    exec_strategy.num_threads=1
+    exec_strategy.num_threads = 1
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
