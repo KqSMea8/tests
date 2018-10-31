@@ -7,6 +7,13 @@ fi
 
 rpc_name=$1
 
-image=registry.baidu.com/gongweibao/distribute_test_transformer:${rpc_name}
+image=registry.baidu.com/gongweibao/distributed_paddle:${rpc_name}
 docker build --build-arg rpc_name=${rpc_name} --network host . -t ${image}
 docker push ${image}
+
+if [[ $rpc_name == "grpc" ]]; then
+    rpc_name="nccl2"
+    image=registry.baidu.com/gongweibao/distributed_paddle:${rpc_name}
+    docker build --build-arg rpc_name=${rpc_name} --network host . -t ${image}
+    docker push ${image}
+fi
