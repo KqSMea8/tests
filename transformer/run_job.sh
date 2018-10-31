@@ -32,7 +32,7 @@ paddlecloud job \
     --k8s-memory 120Gi \
     --k8s-ps-memory 40Gi \
     --job-name gongweibao-${rpc_name}-transformer \
-    --start-cmd "python -u run.py --update_mothod=${update_method}" \
+    --start-cmd "python -u run.py --update_method ${update_method}" \
     --job-conf transformer/conf.py \
     --files transformer/config.py transformer/infer.py transformer/model.py transformer/optim.py transformer/profile.py transformer/reader.py transformer/train.py transformer/util.py transformer/run.py \
     --k8s-not-local  \

@@ -80,7 +80,7 @@ def multi_head_attention(queries,
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
         reshaped = layers.reshape(
-            x=x, shape=[0, 0, n_head, hidden_size // n_head])
+            x=x, shape=[0, 0, n_head, hidden_size // n_head], inplace=True)
 
         # permuate the dimensions into:
         # [batch_size, n_head, max_sequence_len, hidden_size_per_head]
@@ -99,7 +99,9 @@ def multi_head_attention(queries,
         # The value 0 in shape attr means copying the corresponding dimension
         # size of the input as the output dimension size.
         return layers.reshape(
-            x=trans_x, shape=[0, 0, trans_x.shape[2] * trans_x.shape[3]])
+            x=trans_x,
+            shape=[0, 0, trans_x.shape[2] * trans_x.shape[3]],
+            inplace=True)
 
     def scaled_dot_product_attention(q, k, v, attn_bias, d_key, dropout_rate):
         """
@@ -122,8 +124,15 @@ def multi_head_attention(queries,
     q, k, v = __compute_qkv(queries, keys, values, n_head, d_key, d_value)
 
     if cache is not None:  # use cache and concat time steps
-        k = cache["k"] = layers.concat([cache["k"], k], axis=1)
-        v = cache["v"] = layers.concat([cache["v"], v], axis=1)
+        # Since the inplace reshape in __split_heads changes the shape of k and
+        # v, which is the cache input for next time step, reshape the cache
+        # input from the previous time step first.
+        k = cache["k"] = layers.concat(
+            [layers.reshape(
+                cache["k"], shape=[0, 0, d_model]), k], axis=1)
+        v = cache["v"] = layers.concat(
+            [layers.reshape(
+                cache["v"], shape=[0, 0, d_model]), v], axis=1)
 
     q = __split_heads(q, n_head)
     k = __split_heads(k, n_head)
@@ -219,6 +228,7 @@ def prepare_encoder_decoder(src_word,
         size=[src_max_len, src_emb_dim],
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_name, trainable=False))
+    src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
         enc_input,
@@ -458,7 +468,7 @@ def transformer(src_vocab_size,
                 use_py_reader=False,
                 is_test=False):
     if weight_sharing:
-        assert src_vocab_size == src_vocab_size, (
+        assert src_vocab_size == trg_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
 
@@ -522,8 +532,7 @@ def transformer(src_vocab_size,
             epsilon=label_smooth_eps)
 
     cost = layers.softmax_with_cross_entropy(
-        logits=layers.reshape(
-            predict, shape=[-1, trg_vocab_size]),
+        logits=predict,
         label=label,
         soft_label=True if label_smooth_eps else False)
     weighted_cost = cost * weights
@@ -636,6 +645,9 @@ def wrap_decoder(trg_vocab_size,
         preprocess_cmd,
         postprocess_cmd,
         caches=caches)
+    # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
+    dec_output = layers.reshape(
+        dec_output, shape=[-1, dec_output.shape[-1]], inplace=True)
     if weight_sharing:
         predict = layers.matmul(
             x=dec_output,
@@ -750,7 +762,6 @@ def fast_decode(
                 dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
                 enc_output=pre_enc_output,
                 caches=pre_caches)
-            logits = layers.reshape(logits, (-1, trg_vocab_size))
 
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)

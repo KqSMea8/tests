@@ -1,23 +1,21 @@
 import argparse
 import ast
+import copy
+import logging
 import multiprocessing
 import os
 import six
+import sys
 import time
 
 import numpy as np
 import paddle.fluid as fluid
-import paddle.fluid.profiler as profiler
+from paddle.fluid.transpiler.details import program_to_code
 
 import reader
 from config import *
 from model import transformer, position_encoding_init
 
-from paddle.fluid.transpiler.details import program_to_code
-
-import logging
-import sys
-import copy
 
 def parse_args():
     parser = argparse.ArgumentParser("Training for Transformer.")
@@ -86,8 +84,7 @@ def parse_args():
         type=lambda x: str(x.encode().decode("unicode-escape")),
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
-        "For EN-DE BPE data we provided, use spaces as token delimiter. "
-        "For EN-FR wordpiece data we provided, use '\x01' as token delimiter.")
+        "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
         'opts',
         help='See config.py for all options',
@@ -120,7 +117,7 @@ def parse_args():
     parser.add_argument(
         "--use_mem_opt",
         type=ast.literal_eval,
-        default=False,
+        default=True,
         help="The flag indicating whether to use memory optimization.")
     parser.add_argument(
         "--use_py_reader",
@@ -131,11 +128,7 @@ def parse_args():
         "--fetch_steps",
         type=int,
         default=100,
-        help="Fetch outputs steps.")
-
-    #parser.add_argument(
-    #    '--profile', action='store_true', help='If set, profile a few steps.')
-
+        help="The frequency to fetch and print output.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -151,17 +144,16 @@ def parse_args():
                         [TrainTaskConfig, ModelHyperParams])
     return args
 
-def append_nccl2_prepare(trainer_id, worker_endpoints, current_endpoint):
-    assert(trainer_id >= 0 and
-           len(worker_endpoints) > 1 and
-           current_endpoint in worker_endpoints)
+
+def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
+                         current_endpoint):
+    assert (trainer_id >= 0 and len(worker_endpoints) > 1 and
+            current_endpoint in worker_endpoints)
     eps = copy.deepcopy(worker_endpoints)
     eps.remove(current_endpoint)
-    nccl_id_var = fluid.default_startup_program().global_block().create_var(
-        name="NCCLID",
-        persistable=True,
-        type=fluid.core.VarDesc.VarType.RAW)
-    fluid.default_startup_program().global_block().append_op(
+    nccl_id_var = startup_prog.global_block().create_var(
+        name="NCCLID", persistable=True, type=fluid.core.VarDesc.VarType.RAW)
+    startup_prog.global_block().append_op(
         type="gen_nccl_id",
         inputs={},
         outputs={"NCCLID": nccl_id_var},
@@ -171,6 +163,7 @@ def append_nccl2_prepare(trainer_id, worker_endpoints, current_endpoint):
             "trainer_id": trainer_id
         })
     return nccl_id_var
+
 
 def pad_batch_data(insts,
                    pad_idx,
@@ -385,8 +378,11 @@ def py_reader_provider_wrapper(data_reader):
 
 def test_context(exe, train_exe, dev_count):
     # Context to do validation.
-    startup_prog = fluid.Program()
     test_prog = fluid.Program()
+    startup_prog = fluid.Program()
+    if args.enable_ce:
+        test_prog.random_seed = 1000
+        startup_prog.random_seed = 1000
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
@@ -408,7 +404,7 @@ def test_context(exe, train_exe, dev_count):
                 TrainTaskConfig.label_smooth_eps,
                 use_py_reader=args.use_py_reader,
                 is_test=True)
-
+    test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
         args, is_test=True, count=dev_count, pyreader=pyreader)
 
@@ -448,8 +444,17 @@ def test_context(exe, train_exe, dev_count):
     return test
 
 
-def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
-               token_num, predict, pyreader, nccl2_num_trainers=1, nccl2_trainer_id=0):
+def train_loop(exe,
+               train_prog,
+               startup_prog,
+               dev_count,
+               sum_cost,
+               avg_cost,
+               token_num,
+               predict,
+               pyreader,
+               nccl2_num_trainers=1,
+               nccl2_trainer_id=0):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
         fluid.io.load_persistables(exe, TrainTaskConfig.ckpt_path)
@@ -464,17 +469,12 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
-    # exec_strategy.num_iteration_per_drop_scope = 5
+    exec_strategy.num_threads=1
     build_strategy = fluid.BuildStrategy()
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
     # `1 / token_number` for average cost.
-
-    #build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
-
-    exec_strategy = fluid.ExecutionStrategy()
-    #if args.update_method == "nccl2":
-    exec_strategy.num_threads = 1
+    # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
 
     logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
@@ -483,7 +483,8 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
         main_program=train_prog,
         build_strategy=build_strategy,
         exec_strategy=exec_strategy,
-        num_trainers=nccl2_num_trainers, trainer_id=nccl2_trainer_id)
+        num_trainers=nccl2_num_trainers,
+        trainer_id=nccl2_trainer_id)
 
     if args.val_file_pattern is not None:
         test = test_context(exe, train_exe, dev_count)
@@ -509,44 +510,42 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
             data_generator = train_data()
 
         batch_id = 0
-        avg_batch_time=time.time()
         while True:
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
-
-                if TrainTaskConfig.profile and batch_id == 5:
-                    logging.info("begin profiler")
-                    profiler.start_profiler("All")
-                    profiler.reset_profiler()
-                elif TrainTaskConfig.profile and batch_id == 10:
-                    logging.info("end profiler")
-                    #logging.info("profiling total time: ", time.time() - start_time)
-                    profiler.stop_profiler("total", "./transformer_local_profile_{}_pass{}".format(batch_id, pass_id))
-                    sys.exit(0)
-
-                logging.info("batch_id:{}".format(batch_id))
                 outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name] if (batch_id % args.fetch_steps == 0 or TrainTaskConfig.profile) else[], 
-                        feed=feed_dict_list)
-                
-                if (batch_id % args.fetch_steps == 0 and batch_id > 0):
-                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[
-                        1])
+                    fetch_list=[sum_cost.name, token_num.name]
+                    if step_idx % args.fetch_steps == 0 else [],
+                    feed=feed_dict_list)
+
+                if step_idx % args.fetch_steps == 0:
+                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(
+                        outs[1])
                     # sum the cost from multi-devices
                     total_sum_cost = sum_cost_val.sum()
                     total_token_num = token_num_val.sum()
                     total_avg_cost = total_sum_cost / total_token_num
 
-                    logging.info("step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                                 "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
-                          (step_idx, pass_id, batch_id, total_avg_cost,
-                           total_avg_cost - loss_normalizer,
-                           np.exp([min(total_avg_cost, 100)]), 
-                           args.fetch_steps / (time.time() - avg_batch_time)))
+                    if step_idx == 0:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)])))
+                        avg_batch_time = time.time()
+                    else:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)]),
+                             args.fetch_steps / (time.time() - avg_batch_time)))
+                        avg_batch_time = time.time()
 
-                if step_idx % int(TrainTaskConfig.
-                                  save_freq) == TrainTaskConfig.save_freq - 1:
+                if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
                     fluid.io.save_persistables(
                         exe,
                         os.path.join(TrainTaskConfig.ckpt_dir,
@@ -556,8 +555,7 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                         os.path.join(TrainTaskConfig.model_dir,
                                      "iter_" + str(step_idx) + ".infer.model"),
                         train_prog)
-                if batch_id % args.fetch_steps == 0 and batch_id > 0:
-                    avg_batch_time=time.time()
+
                 init_flag = False
                 batch_id += 1
                 step_idx += 1
@@ -578,10 +576,12 @@ def train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                                    time_consumed))
         else:
             logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
-        fluid.io.save_persistables(
-            exe,
-            os.path.join(TrainTaskConfig.ckpt_dir,
-                         "pass_" + str(pass_id) + ".checkpoint"), train_prog)
+        if not args.enable_ce:
+            fluid.io.save_persistables(
+                exe,
+                os.path.join(TrainTaskConfig.ckpt_dir,
+                             "pass_" + str(pass_id) + ".checkpoint"),
+                train_prog)
 
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
@@ -640,11 +640,11 @@ def train(args):
                 use_py_reader=args.use_py_reader,
                 is_test=False)
 
-            optimizer=None
+            optimizer = None
             if args.sync:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
-                print("before adam")
+                logging.info("before adam")
 
                 with fluid.default_main_program()._lr_schedule_guard():
                     learning_rate = lr_decay * TrainTaskConfig.learning_rate
@@ -662,7 +662,7 @@ def train(args):
         fluid.memory_optimize(train_prog)
 
     if args.local:
-        print("local start_up:")
+        logging.info("local start_up:")
         train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
                    token_num, predict, pyreader)
     else:
@@ -678,12 +678,14 @@ def train(args):
             if trainer_id == 0:
                 logging.info("train_id == 0, sleep 60s")
                 time.sleep(60)
-            print("trainers_num:", trainers_num)
-            print("worker_endpoints:", worker_endpoints)
-            print("current_endpoint:", current_endpoint)
-            append_nccl2_prepare(trainer_id, worker_endpoints, current_endpoint)
-            train_loop(exe, fluid.default_main_program(), dev_count, sum_cost, avg_cost,
-                       lr_scheduler, token_num, predict, trainers_num, trainer_id)
+            logging.info("trainers_num:{}".format(trainers_num))
+            logging.info("worker_endpoints:{}".format(worker_endpoints))
+            logging.info("current_endpoint:{}".format(current_endpoint))
+            append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
+                                 current_endpoint)
+            train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
+                       avg_cost, token_num, predict, pyreader, trainers_num,
+                       trainer_id)
             return
 
         port = os.getenv("PADDLE_PORT", "6174")
@@ -696,11 +698,11 @@ def train(args):
         current_endpoint = os.getenv("POD_IP") + ":" + port
         trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
 
-        print("pserver_endpoints", pserver_endpoints)
-        print("current_endpoint", current_endpoint)
-        print("trainer_id", trainer_id)
-        print("pserver_ips", pserver_ips)
-        print("port", port)
+        logging.info("pserver_endpoints:{}".format(pserver_endpoints))
+        logging.info("current_endpoint:{}".format(current_endpoint))
+        logging.info("trainer_id:{}".format(trainer_id))
+        logging.info("pserver_ips:{}".format(pserver_ips))
+        logging.info("port:{}".format(port))
 
         t = fluid.DistributeTranspiler()
         t.transpile(
@@ -715,17 +717,11 @@ def train(args):
             current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
                 "PADDLE_PORT")
             if not current_endpoint:
-                print("need env SERVER_ENDPOINT")
+                logging.critical("need env SERVER_ENDPOINT")
                 exit(1)
             pserver_prog = t.get_pserver_program(current_endpoint)
             pserver_startup = t.get_startup_program(current_endpoint,
                                                     pserver_prog)
-
-            print("pserver start:")
-            program_to_code(pserver_startup)
-            print("pserver train:")
-            program_to_code(pserver_prog)
-            #sys.exit(0)
 
             exe.run(pserver_startup)
             exe.run(pserver_prog)
@@ -733,24 +729,18 @@ def train(args):
             logging.info("distributed: trainer started")
             trainer_prog = t.get_trainer_program()
 
-            '''
-            print("trainer start:")
-            program_to_code(pserver_startup)
-            print("trainer train:")
-            program_to_code(trainer_prog)
-            sys.exit(0)
-            '''
-
             train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
                        avg_cost, token_num, predict, pyreader)
         else:
-            logging.critical("environment var TRAINER_ROLE should be TRAINER os PSERVER")
+            logging.critical(
+                "environment var TRAINER_ROLE should be TRAINER os PSERVER")
             exit(1)
 
 
 if __name__ == "__main__":
     LOG_FORMAT = "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=LOG_FORMAT)
+    logging.basicConfig(
+        stream=sys.stdout, level=logging.DEBUG, format=LOG_FORMAT)
 
     args = parse_args()
     train(args)
