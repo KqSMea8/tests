@@ -8,7 +8,7 @@ fi
 rpc_name=$1
 
 rpc_image=registry.baidu.com/gongweibao/distributed_paddle:${rpc_name}
-docker build --build-arg rpc_name=${rpc_name} --network host . -t ${rpc_image}
+docker build --no-cache --build-arg rpc_name=${rpc_name} --network host . -t ${rpc_image}
 docker push ${rpc_image}
 
 if [[ $rpc_name == "grpc" ]]; then
