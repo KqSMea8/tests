@@ -1,8 +1,7 @@
 #!/bin/bash
 set -xe
 
-~/.hgcp/software-install/HGCP_client/tools/hadoop-v2/hadoop/bin/hadoop fs \
-    -Dhadoop.job.ugi=bml,bml#user \
+hadoop fs -Dhadoop.job.ugi=bml,bml#user \
     -fs hdfs://nmg01-mulan-hdfs.dmop.baidu.com:54310 \
     -get /app/inf/mpi/bml-guest/paddlepaddle/public/transformer/cluster_test_data_en_fr
 
