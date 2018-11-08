@@ -1,18 +1,23 @@
 #!/bin/bash
 set -xe
 
-. env.sh
+~/.hgcp/software-install/HGCP_client/tools/hadoop-v2/hadoop/bin/hadoop fs \
+    -Dhadoop.job.ugi=bml,bml#user \
+    -fs hdfs://nmg01-mulan-hdfs.dmop.baidu.com:54310 \
+    -get /app/inf/mpi/bml-guest/paddlepaddle/public/transformer/cluster_test_data_en_fr
+
+. ./env.sh
 
 export PADDLE_IS_LOCAL=0
 export FLAGS_fraction_of_gpu_memory_to_use=1.0
 
 python -u train.py \
-    --src_vocab_fpath 'dataset/cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
-    --trg_vocab_fpath 'dataset/cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
+    --src_vocab_fpath 'cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
+    --trg_vocab_fpath 'cluster_test_data_en_fr/thirdparty/vocab.wordpiece.en-fr' \
     --special_token '<s>' '<e>' '<unk>'  \
     --token_delimiter '\x01' \
-    --train_file_pattern 'dataset/cluster_test_data_en_fr/train/train.wordpiece.en-fr.0' \
-    --val_file_pattern 'dataset/cluster_test_data_en_fr/thirdparty/newstest2014.wordpiece.en-fr' \
+    --train_file_pattern 'cluster_test_data_en_fr/train/train.wordpiece.en-fr.0' \
+    --val_file_pattern 'cluster_test_data_en_fr/thirdparty/newstest2014.wordpiece.en-fr' \
     --use_token_batch True \
     --batch_size  3200 \
     --sort_type pool \

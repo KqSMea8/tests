@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ $# != 1 ]]; then
+    echo "Please input jobname"
+    exit 1
+fi
+
 HGCP_CLIENR_BIN=~/.hgcp/software-install/HGCP_client/bin
 
 ${HGCP_CLIENR_BIN}/submit \
