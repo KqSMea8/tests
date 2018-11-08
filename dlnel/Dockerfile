@@ -13,11 +13,11 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so.7 /usr/lib/libcudnn.so && ln -s 
 # Add "ENV http_proxy=http://ip:port" if your download is slow, and don't forget to unset it at runtime.
 # exmaple: unset http_proxy && unset https_proxy && python fluid_benchmark.py ...
 
-ENV http_proxy=http://172.19.56.198:8123
-ENV https_proxy=http://172.19.56.198:8123
+ENV http_proxy=http://172.19.57.45:3128
+ENV https_proxy=http://172.19.57.45:3128
 
 RUN pip install -U pip
-RUN pip install -U kubernetes paddlepaddle
+#RUN pip install -U kubernetes
 
 #RUN sh -c 'echo "import paddle.v2 as paddle\npaddle.dataset.cifar.train10()\npaddle.dataset.flowers.fetch()" | python'
 #RUN sh -c 'echo "import paddle.v2 as paddle\npaddle.dataset.mnist.train()\npaddle.dataset.mnist.test()\npaddle.dataset.imdb.fetch()" | python'
@@ -32,9 +32,10 @@ ADD ./data/cluster_test_data_en_fr /workspace/cluster_test_data_en_fr
 
 ADD whl/*.whl /
 RUN pip install /*.whl && rm -f /*.whl 
+ADD libmkldnn.so.0 /usr/local/lib
 
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 #ADD fluid_benchmark.py recordio_converter.py args.py recordio_converter.py run.sh run_fluid_benchmark.sh imagenet_reader.py /workspace/
-ADD models/ /workspace/models/
+ADD models/ /workspace/
 
