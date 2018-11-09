@@ -3,7 +3,7 @@ set -xe
 
 hadoop fs -Dhadoop.job.ugi=bml,bml#user \
     -fs hdfs://nmg01-mulan-hdfs.dmop.baidu.com:54310 \
-    -get /app/inf/mpi/bml-guest/paddlepaddle/public/transformer/cluster_test_data_en_fr
+    -get /app/inf/mpi/bml-guest/paddlepaddle/public/transformer/cluster_test_data_en_fr .
 
 . ./env.sh
 
