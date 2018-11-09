@@ -35,4 +35,4 @@ python -u train.py \
   prepostprocess_dropout 0.3 \
   attention_dropout 0.1 \
   relu_dropout 0.1 \
-  weight_sharing True > log/local.txt 2>&1 
+  weight_sharing True | tee > log/local.txt 2>&1 
